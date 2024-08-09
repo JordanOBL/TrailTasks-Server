@@ -2636,7 +2636,7 @@ app.post('/push', async (req, res) => {
     console.log('sending changes to pg', {changes, lastPulledAt});
     if (lastPulledAt !== 'null') {
       if (changes?.users?.created[0] !== undefined) {
-        const users = await User.bulkCreate(changes.users.created);
+        const users = await User.bulkCreate(changes.users.created, {updateOnDuplicate: ['id']});
       }
       if (changes?.users_achievements?.created[0] !== undefined) {
         const users_achievements = await User_Achievement.bulkCreate(
