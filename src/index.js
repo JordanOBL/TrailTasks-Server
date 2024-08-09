@@ -2745,11 +2745,11 @@ app.post('/push', async (req, res) => {
         });
       }
     }
+   res.sendStatus(200);
   } catch (err) {
-    console.error('Error in server /push', err);
-  }
-  res.sendStatus(200);
-});
+    console.error('Error in server /push:', err);
+    res.status(500).json({ error: 'An error occurred during the push operation.' });
+  }});
 
 const connect = async () => {
   try {
