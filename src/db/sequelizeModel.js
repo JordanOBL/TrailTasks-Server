@@ -367,7 +367,7 @@ export const Subscription = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
-    expires_at: {type: DataTypes.STRING, allowNull: false},
+    expires_at: {type: DataTypes.STRING, allowNull: true},
   },
   {tableName: 'users_subscriptions'}
 );

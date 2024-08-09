@@ -2619,7 +2619,7 @@ app.get('/pull', async (req, res) => {
         timestamp: Date.now(),
       };
 
-      console.log('responseData from pull', responseData);
+      //console.log('responseData from pull', responseData);
       return res.json(responseData);
     }
   } catch (err) {
@@ -2665,7 +2665,7 @@ app.post('/push', async (req, res) => {
       //updates to created rows in pg database
       if (changes?.users?.updated[0] !== undefined) {
         const updateQueries = changes.users.updated.map((remoteEntry) => {
-          console.log({remoteEntry});
+          //console.log({remoteEntry});
           return User.update(remoteEntry, {
             where: {
               id: remoteEntry.id,
@@ -2676,7 +2676,7 @@ app.post('/push', async (req, res) => {
       }
       if (changes?.users_miles?.updated[0] !== undefined) {
         const updateQueries = changes.users_miles.updated.map((remoteEntry) => {
-          console.log({remoteEntry});
+          //console.log({remoteEntry});
           return User_Miles.update(
             {...remoteEntry},
             {
@@ -2691,7 +2691,7 @@ app.post('/push', async (req, res) => {
       if (changes?.users_sessions?.updated[0] !== undefined) {
         const updateQueries = changes.users_sessions.updated.map(
           (remoteEntry) => {
-            console.log({remoteEntry});
+            //console.log({remoteEntry});
             return User_Session.update(
               {...remoteEntry},
               {
@@ -2707,7 +2707,7 @@ app.post('/push', async (req, res) => {
       if (changes?.users_achievements?.updated[0] !== undefined) {
         const updateQueries = changes.users_achievements.updated.map(
           (remoteEntry) => {
-            console.log({remoteEntry});
+            //console.log({remoteEntry});
             return User_Achievement.update(
               {...remoteEntry},
               {
@@ -2723,7 +2723,7 @@ app.post('/push', async (req, res) => {
       if (changes?.users_subscriptions?.updated[0] !== undefined) {
         const updateQueries = changes.users_subscriptions.updated.map(
           (remoteEntry) => {
-            console.log({remoteEntry});
+           // console.log({remoteEntry});
             return Subscription.update(
               {...remoteEntry},
               {
