@@ -14,7 +14,7 @@ import {
   User_Miles,
   User_Purchased_Trail,
   User_Session,
-} from './db/sequelizeModel.mjs';
+} from './db/sequelizeModel.js';
 // import pool from "./db/config.js";
 import {Sequelize, Op} from 'sequelize';
 import achievementsWithIds from './assets/Achievements/addAchievementIds.js';
