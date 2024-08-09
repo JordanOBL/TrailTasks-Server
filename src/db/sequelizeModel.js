@@ -9,9 +9,9 @@ import {DataTypes, Sequelize} from 'sequelize';
  //const PGPASSWORD = '4046';
 //railway.app pgdatabase
 const PGUSER = 'postgres';
-const PGHOST = "postgres-aitp.railway.internal";
+const PGHOST = "monorail.proxy.rlwy.net";
 const PGDBNAME = 'railway';
-const PGPORT = 5432;
+const PGPORT = 47370;
 const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
 
 

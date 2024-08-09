@@ -46,9 +46,9 @@ const newAchievements = achievementsWithIds(masterAchievementList);
 
 //railway.app pgdatabase
 const PGUSER = 'postgres';
-const PGHOST = "postgres-aitp.railway.internal";
+const PGHOST = "monorail.proxy.rlwy.net";
 const PGDBNAME = 'railway';
-const PGPORT = 5432;
+const PGPORT = 47370;
 const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
 
 export const sequelize = new Sequelize(PGDBNAME, PGUSER, PGPASSWORD, {
