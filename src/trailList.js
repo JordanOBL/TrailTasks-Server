@@ -234,7 +234,7 @@
       trail_elevation: '111',
       all_trails_url:'https://www.alltrails.com/trail/us/south-dakota/medicine-root-and-castle-trail-loop',
       nps_url: 'https://www.nps.gov/places/medicine-root-trailhead.htm',
-      hiking_project_url: 'https://www.hikingproject.com/trail/7004774/medicine-root-loop
+      hiking_project_url: 'https://www.hikingproject.com/trail/7004774/medicine-root-loop'
     },
      {
       id: '12',
