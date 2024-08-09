@@ -2406,7 +2406,7 @@ app.get('/pull', async (req, res) => {
          // },
           trails: {
             created:[], 
-            updated: createdTrails,,
+            updated: createdTrails,
             deleted: [],
           },
           park_states: {
@@ -2417,7 +2417,7 @@ app.get('/pull', async (req, res) => {
 
           session_categories: {
             created: [],
-            updated:  createdSessionCategories,,
+            updated:  createdSessionCategories,
             deleted: [],
           },
         },
