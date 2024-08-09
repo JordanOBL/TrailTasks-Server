@@ -55,12 +55,12 @@ export const sequelize = new Sequelize(PGDBNAME, PGUSER, PGPASSWORD, {
   host: PGHOST,
   port: PGPORT,
   dialect: 'postgres',
-//  dialectOptions: {
-//    ssl: {
-//      require: true,
-//      rejectUnauthorized: false,
-//    },
- // },
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
 });
 
 const app = express();
