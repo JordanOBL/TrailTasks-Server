@@ -2640,27 +2640,27 @@ app.post('/push', async (req, res) => {
       }
       if (changes?.users_achievements?.created[0] !== undefined) {
         const users_achievements = await User_Achievement.bulkCreate(
-          changes.users_achievements.created
+          changes.users_achievements.created, {updateOnDuplicate: ['id']})
         );
       }
       if (changes?.users_sessions?.created[0] !== undefined) {
         const users_sessions = await User_Session.bulkCreate(
-          changes.users_sessions.created
+          changes.users_sessions.created, {updateOnDuplicate: ['id']})
         );
       }
       if (changes?.users_miles?.created[0] !== undefined) {
         const users_miles = await User_Miles.bulkCreate(
-          changes.users_miles.created
+          changes.users_miles.created, {updateOnDuplicate: ['id']})
         );
       }
       if (changes?.users_purchased_trails?.created[0] !== undefined) {
         const users_purchased_trails = await User_Purchased_Trail.bulkCreate(
-          changes.users_purchased_trails.created
+          changes.users_purchased_trails.created, {updateOnDuplicate: ['id']})
         );
       }
       if (changes?.users_subscriptions?.created[0] !== undefined) {
         const users_subscriptions = await Subscription.bulkCreate(
-          changes.users_subscriptions.created
+          changes.users_subscriptions.created, {updateOnDuplicate: ['id']})
         );
       }
       //updates to created rows in pg database
