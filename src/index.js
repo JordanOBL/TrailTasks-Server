@@ -15,7 +15,6 @@ import {
   User_Purchased_Trail,
   User_Session,
 } from './db/sequelizeModel.mjs';
-import { Request, Response, NextFunction } from 'express';
 // import pool from "./db/config.js";
 import {Sequelize, Op} from 'sequelize';
 import achievementsWithIds from './assets/Achievements/addAchievementIds.js';
@@ -72,7 +71,7 @@ app.use(cors());
 
 //app.use("/api/sync", router);
 //
-const findUser = async (req: Request, res: Response, next: NextFunction) => {
+const findUser = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
