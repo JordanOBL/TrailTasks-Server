@@ -1,12 +1,19 @@
 import {DataTypes, Sequelize} from 'sequelize';
 //const {Sequelize, DataTypes} = require('sequelize');
 
- const PGUSER = 'jordan';
+ //const PGUSER = 'jordan';
 //const PGHOST = '192.168.1.208';
- const PGHOST = 'localhost';
- const PGDBNAME = 'trailtasks';
- const PGPORT = 5433;
- const PGPASSWORD = '4046';
+ //const PGHOST = 'localhost';
+ //const PGDBNAME = 'trailtasks';
+ //const PGPORT = 5433;
+ //const PGPASSWORD = '4046';
+//railway.app pgdatabase
+const PGUSER = 'postgres';
+const PGHOST = "postgres-aitp.railway.internal";
+const PGDBNAME = 'railway';
+const PGPORT = 5432;
+const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
+
 
 //const PGUSER = 'hikeflowadmin';
 //const PGHOST = "192.168.76.16";
