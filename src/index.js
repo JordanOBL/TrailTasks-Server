@@ -2390,13 +2390,13 @@ app.get('/pull', async (req, res) => {
       const responseData = {
         changes: {
           achievements: {
-            created: createdAchievements,
-            updated: [],
+            created:[], 
+            updated: createdAchievements,
             deleted: [],
           },
           parks: {
-            created: createdParks,
-            updated: [],
+            created:[], 
+            updated: createdParks,
             deleted: [],
           },
         //  users: {
@@ -2405,19 +2405,19 @@ app.get('/pull', async (req, res) => {
            // deleted: [],
          // },
           trails: {
-            created: createdTrails,
-            updated: [],
+            created:[], 
+            updated: createdTrails,,
             deleted: [],
           },
           park_states: {
-            created: createdParkStates,
-            updated: [],
+            created:[], 
+            updated: createdParkStates,
             deleted: [],
           },
 
           session_categories: {
-            created: createdSessionCategories,
-            updated: [],
+            created: [],
+            updated:  createdSessionCategories,,
             deleted: [],
           },
         },
@@ -2449,7 +2449,6 @@ app.get('/pull', async (req, res) => {
           },
         },
       });
-      console.log({createdUsers});
       const createdUserMiles = await User_Miles.findAll({
         where: {
           createdAt: {
