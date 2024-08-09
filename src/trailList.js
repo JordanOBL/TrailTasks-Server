@@ -250,7 +250,7 @@
       trail_elevation: '305',
       all_trails_url:'https://www.alltrails.com/explore/trail/us/south-dakota/castle-trail--4?mobileMap=false&ref=sidebar-static-map',
       nps_url: 'https://www.nps.gov/places/castle-trailhead.htm',
-      hiking_project_url: 'https://www.hikingproject.com/trail/7004804/castle-trail
+      hiking_project_url: 'https://www.hikingproject.com/trail/7004804/castle-trail'
     },
     {
       id: '13',
