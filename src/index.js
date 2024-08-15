@@ -4,6 +4,7 @@
 import {
   Achievement,
   Park,
+    Completed_Hike,
   Park_State,
   SYNC,
   Session_Category,
@@ -44,7 +45,7 @@ const newAchievements = achievementsWithIds(masterAchievementList);
 //const PGPASSWORD = 'Sk8mafia116!';
 //
 
-//railway.app pgdatabase
+//railway.app database
 const PGUSER = 'postgres';
 const PGHOST = "monorail.proxy.rlwy.net";
 const PGDBNAME = 'railway';
@@ -77,7 +78,7 @@ const findUser = async (req, res, next) => {
   try {
     // Query the database for the user
     const user = await User.findOne({ where: { email, password } });
-    console.log('user from findUser()', user);
+    console.log('user from server findUser()', user);
 
     // Set userId in res.locals
     if (user) {
@@ -86,13 +87,15 @@ const findUser = async (req, res, next) => {
       const userSessions = await User_Session.findAll({ where: { user_id: user.id } });
       const userPurchasedTrails = await User_Purchased_Trail.findAll({ where: { user_id: user.id } });
       const userAchievements = await User_Achievement.findAll({ where: { user_id: user.id } });
-    
+      const completedHikes = await Completed_Hike.findAll({where: {user_id: user.id}});
       res.locals.user = user;
       res.locals.userMiles = userMiles;
       res.locals.userSubscription = userSubscription;
       res.locals.userSessions = userSessions;
       res.locals.userPurchasedTrails = userPurchasedTrails;
       res.locals.userAchievements = userAchievements;
+      res.locals.completedHikes = completedHikes;
+
     } else {
       res.locals.user = null;
       res.locals.userMiles = null;
@@ -100,6 +103,9 @@ const findUser = async (req, res, next) => {
       res.locals.userSessions = null;
       res.locals.userPurchasedTrails = null;
       res.locals.userAchievements = null;
+      res.locals.userAchievements = null;
+      res.locals.completedHikes = null;
+
     }
     
     // Continue to the next middleware/route handler
@@ -112,11 +118,11 @@ const findUser = async (req, res, next) => {
 };
 
 app.post('/api/users', findUser, async (req, res, next) => {
-  const { user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements} = res.locals;
+  const { user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements, completedHikes} = res.locals;
 
   if (user) {
     // Respond with userId if found
-    return res.status(200).json({ user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements });
+    return res.status(200).json({ user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements, completedHikes });
   } else {
     // Respond with a 404 status code if user not found
     return res.status(404).json({ message: 'User not found' });
@@ -127,7 +133,7 @@ app.post('/api/users', findUser, async (req, res, next) => {
 app.get('/api/seed', async (req, res) => {
   console.log('seeding postgres table...');
   try {
-    const parks = await Park.bulkCreate(
+    await Park.bulkCreate(
       [
         {id: '1', park_name: 'Acadia', park_type: 'National'},
         {id: '2', park_name: 'American Samoa', park_type: 'National'},
@@ -219,7 +225,7 @@ app.get('/api/seed', async (req, res) => {
       ],
       {ignoreDuplicates: true}
     );
-    const park_states = await Park_State.bulkCreate(
+    await Park_State.bulkCreate(
       [
         {
           id: '1',
@@ -633,7 +639,7 @@ app.get('/api/seed', async (req, res) => {
       ],
       {ignoreDuplicates: true}
     );
-    const trails = await Trail.bulkCreate(
+     await Trail.bulkCreate(
       [
         {
           id: '92',
@@ -2338,18 +2344,17 @@ app.get('/api/seed', async (req, res) => {
           hiking_project_url:
             'https://www.hikingproject.com/trail/7007987/sunset-trail',
         },
-      ],
-      {ignoreDuplicates: true}
+      ], {ignoreDuplicates: true}
     );
-    const achievements = await Achievement.bulkCreate(newAchievements, {
+     await Achievement.bulkCreate(newAchievements, {
       ignoreDuplicates: true,
     });
 
-    const session_categories = await Session_Category.bulkCreate(
+   await Session_Category.bulkCreate(
       sessionCategories,
       {ignoreDuplicates: true}
     );
-    console.log('Seed Successful)');
+    console.log('Seeding Server Successful');
     res.status(200);
   } catch (err) {
     console.log('Error in server seeding pgdb', err);
@@ -2375,18 +2380,17 @@ app.get('/pull', async (req, res) => {
     console.debug('user in pull id', userId);
     console.log('last pulled at', {lastPulledAt});
     if (lastPulledAt === new Date(0).toISOString()) {
+        console.log("Initial Data Pull From Server...")
       const createdAchievements = await Achievement.findAll({});
-      console.log('first Achievements Pull', createdAchievements);
-      //const createdUsers = await User.findAll({});
-      //console.log('first Users Pull', createdUsers);
+
       const createdParks = await Park.findAll({});
-      console.log('first Parks Pull', createdParks);
+
       const createdTrails = await Trail.findAll({});
-      console.log('first Trails Pull', createdTrails);
+
       const createdParkStates = await Park_State.findAll({});
-      console.log('first ParkStates Pull', createdParkStates);
+
       const createdSessionCategories = await Session_Category.findAll({});
-      console.log('first categories Pull', createdSessionCategories);
+
       const responseData = {
         changes: {
           achievements: {
@@ -2399,11 +2403,6 @@ app.get('/pull', async (req, res) => {
             updated: createdParks,
             deleted: [],
           },
-        //  users: {
-         //   created: createdUsers,
-          //  updated: [],
-           // deleted: [],
-         // },
           trails: {
             created:[], 
             updated: createdTrails,
@@ -2414,7 +2413,6 @@ app.get('/pull', async (req, res) => {
             updated: createdParkStates,
             deleted: [],
           },
-
           session_categories: {
             created: [],
             updated:  createdSessionCategories,
@@ -2424,9 +2422,10 @@ app.get('/pull', async (req, res) => {
         timestamp: Date.now(),
       };
 
-      console.log('responseData for new trailtask db', responseData);
+      console.log('Initial Data Pull Complete...');
       return res.json(responseData);
     } else {
+        console.log(`Server: sending all data changes for user: ${userId} since last device pull at: ${lastPulledAt} `)
       const createdParks = await Park.findAll({
         where: {
           createdAt: {
@@ -2508,6 +2507,15 @@ app.get('/pull', async (req, res) => {
           },
         },
       });
+
+      const createdCompletedHikes = await Completed_Hike.findAll({
+          where: {
+              updatedAt: {
+                  [Sequelize.Op.gt]: lastPulledAt,
+              },
+              user_id: userId,
+          },
+      })
     
       const updatedSubscriptions = await Subscription.findAll({
         where: {
@@ -2517,14 +2525,14 @@ app.get('/pull', async (req, res) => {
           user_id: userId,
         },
       });
-      // console.log({createdUserMiles});
-      // const updatedParks = await Park.findAll({
-      //   where: {
-      //     updatedAt: {
-      //       [Sequelize.Op.gt]: lastPulledAt,
-      //     },
-      //   },
-      // });
+
+      const updatedParks = await Park.findAll({
+        where: {
+          updatedAt: {
+            [Sequelize.Op.gt]: lastPulledAt,
+          },
+        },
+      });
       const updatedUsers = await User.findAll({
         where: {
           updatedAt: {
@@ -2557,6 +2565,14 @@ app.get('/pull', async (req, res) => {
           },
         },
       });
+        const updatedCompletedHikes = await Completed_Hike.findAll({
+            where: {
+                updatedAt: {
+                    [Sequelize.Op.gt]: lastPulledAt,
+                },
+                user_id: userId,
+            },
+        })
       //!Removed createdusers, createdUsersSubscriptinos, and created UsersMiles arrays. This removed the fail to update error.
       const responseData = {
         changes: {
@@ -2570,6 +2586,11 @@ app.get('/pull', async (req, res) => {
             updated: updatedUsers.length ? updatedUsers : [],
             deleted: [],
           },
+            completed_hikes: {
+                created: createdCompletedHikes,
+                updated: updatedCompletedHikes.length ? updatedCompletedHikes : [],
+                deleted: [],
+            },
           users_subscriptions: {
             created: [],
             updated: updatedSubscriptions.length ? updatedSubscriptions : [],
@@ -2662,6 +2683,11 @@ app.post('/push', async (req, res) => {
           changes.users_subscriptions.created, {updateOnDuplicate: ['id']}
         );
       }
+        if (changes?.completed_hikes?.created[0] !== undefined) {
+            const completed_hikes = await Completed_Hike.bulkCreate(
+                changes.completed_hikes.created, {updateOnDuplicate: ['id']}
+            );
+        }
       //updates to created rows in pg database
       if (changes?.users?.updated[0] !== undefined) {
         const updateQueries = changes.users.updated.map((remoteEntry) => {
@@ -2736,6 +2762,22 @@ app.post('/push', async (req, res) => {
         );
         await Promise.all(updateQueries);
       }
+        if (changes?.completed_hikes?.updated[0] !== undefined) {
+            const updateQueries = changes.completed_hikes.updated.map(
+                (remoteEntry) => {
+                    console.log({remoteEntry});
+                    return Completed_Hike.update(
+                        {...remoteEntry},
+                        {
+                            where: {
+                                id: remoteEntry.id,
+                            },
+                        }
+                    );
+                }
+            );
+            await Promise.all(updateQueries);
+        }
       if (changes?.users?.deleted[0]) {
         await User.destroy({
           where: {
