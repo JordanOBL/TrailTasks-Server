@@ -2685,7 +2685,7 @@ app.post('/push', async (req, res) => {
       }
         if (changes?.completed_hikes?.created[0] !== undefined) {
             const completed_hikes = await Completed_Hike.bulkCreate(
-                changes.completed_hikes.created, {updateOnDuplicate: ['id']}
+                changes.completed_hikes.created, {updateOnDuplicate: ['updated_at']}
             );
         }
       //updates to created rows in pg database
