@@ -1,5 +1,5 @@
 import {DataTypes, Sequelize} from 'sequelize';
-//const {Sequelize, DataTypes} = require('sequelize');
+
 
  //const PGUSER = 'jordan';
 //const PGHOST = '192.168.1.208';
@@ -8,31 +8,27 @@ import {DataTypes, Sequelize} from 'sequelize';
  //const PGPORT = 5433;
  //const PGPASSWORD = '4046';
 //railway.app pgdatabase
-const PGUSER = 'postgres';
-const PGHOST = "monorail.proxy.rlwy.net";
-const PGDBNAME = 'railway';
-const PGPORT = 47370;
-const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
+// const PGUSER = 'postgres';
+// const PGHOST = "monorail.proxy.rlwy.net";
+// const PGDBNAME = 'railway';
+// const PGPORT = 47370;
+// const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
+import dotenv from 'dotenv'
+dotenv.config({
+    path: `.env`
+});
 
-
-//const PGUSER = 'hikeflowadmin';
-//const PGHOST = "192.168.76.16";
-//const PGHOST = 'trailtasks2024.cbpjcjatkypj.us-west-2.rds.amazonaws.com';
-//const PGDBNAME = 'hikeFlowDB';
-//const PGPORT = 5432;
-//const PGPASSWORD = 'Sk8mafia116!';
-
-const sequelize = new Sequelize(PGDBNAME, PGUSER, PGPASSWORD, {
-  host: PGHOST,
-  port: PGPORT,
-  password: PGPASSWORD,
+const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER, process.env.PGPASSWORD, {
+  host: process.env.PGHOST,
+  port: process.env.PGPORT,
+  password: process.env.PGPASSWORD,
   dialect: 'postgres',
-//  dialectOptions: {
-//    ssl: {
-//      require: true,
-//      rejectUnauthorized: false,
-//    },
-//  },
+ // dialectOptions: {
+ //   ssl: {
+ //     require: true,
+ //     rejectUnauthorized: false,
+ //   },
+ // },
 });
 
 export const Park = sequelize.define(
@@ -399,8 +395,12 @@ User_Achievement.belongsTo(Achievement);
 Badge.belongsToMany(User, {through: 'users_badges'});
 User.belongsToMany(Badge, {through: 'users_badges'});
 
-User.belongsToMany(Trail, {through: 'completed_hikes'});
-Trail.belongsToMany(User, {through: 'completed_hikes'});
+// User.belongsToMany(Trail, {through: 'completed_hikes'});
+// Trail.belongsToMany(User, {through: 'completed_hikes'});
+Completed_Hike.belongsTo(User, {foreignKey: 'user_id'});
+User.hasMany(Completed_Hike, {foreignKey: 'user_id'});
+
+Completed_Hike.belongsTo(Trail, {foreignKey: 'trail_id'});
 
 User.belongsToMany(Trail, {through: 'queued_trails'});
 Trail.belongsToMany(User, {through: 'queued_trails'});

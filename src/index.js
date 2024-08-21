@@ -24,51 +24,32 @@ import cors from 'cors';
 import express from 'express';
 import masterAchievementList from './assets/Achievements/masterAchievementList.js';
 import sessionCategories from './helpers/Session/sessionCategories.js';
+import dotenv from 'dotenv';
 
-// import pkg from "pg";
-// const {Pool} = pkg;
-
-//local pgDB
-//const PGUSER = 'jordan';
-//const PGHOST = "192.168.1.208";
-//const PGHOST = 'localhost'
-//const PGDBNAME = 'trailtasks';
-//const PGPORT = 5433;
-//const PGPASSWORD = '4046';
+// Load environment variables from the correct file based on the environment
+dotenv.config({
+    path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+});
 
 const newAchievements = achievementsWithIds(masterAchievementList);
-//AWS: stopped for expense
-//const PGUSER = 'hikeflowadmin';
-////const PGHOST = "192.168.76.16";
-//const PGDBNAME = 'hikeFlowDB';
-//const PGPORT = 5432;
-//const PGPASSWORD = 'Sk8mafia116!';
-//
 
-//railway.app database
-const PGUSER = 'postgres';
-const PGHOST = "monorail.proxy.rlwy.net";
-const PGDBNAME = 'railway';
-const PGPORT = 47370;
-const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
-
-export const sequelize = new Sequelize(PGDBNAME, PGUSER, PGPASSWORD, {
-  host: PGHOST,
-  port: PGPORT,
+export const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER, process.env.PGPASSWORD, {
+  host: process.env.PGHOST,
+  port: process.env.PGPORT,
   dialect: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
+  // dialectOptions: {
+  //   ssl: {
+  //     require: true,
+  //     rejectUnauthorized: false,
+  //   },
+  // },
 });
 
 const app = express();
 
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended: true}));
-app.use(cors());
+app.use('*', cors());
 
 //app.use("/api/sync", router);
 //
@@ -2355,7 +2336,7 @@ app.get('/api/seed', async (req, res) => {
       {ignoreDuplicates: true}
     );
     console.log('Seeding Server Successful');
-    res.status(200);
+    return res.status(200).json({message: 'Seeding Server Successful'});
   } catch (err) {
     console.log('Error in server seeding pgdb', err);
   }
@@ -2587,7 +2568,7 @@ app.get('/pull', async (req, res) => {
             deleted: [],
           },
             completed_hikes: {
-                created: createdCompletedHikes,
+                created: [],
                 updated: updatedCompletedHikes.length ? updatedCompletedHikes : [],
                 deleted: [],
             },
@@ -2685,7 +2666,7 @@ app.post('/push', async (req, res) => {
       }
         if (changes?.completed_hikes?.created[0] !== undefined) {
             const completed_hikes = await Completed_Hike.bulkCreate(
-                changes.completed_hikes.created, {updateOnDuplicate: ['updated_at']}
+                changes.completed_hikes.created, {updateOnDuplicate: ['updatedAt']}
             );
         }
       //updates to created rows in pg database
@@ -2770,7 +2751,8 @@ app.post('/push', async (req, res) => {
                         {...remoteEntry},
                         {
                             where: {
-                                id: remoteEntry.id,
+                                user_id: remoteEntry.user_id,
+                                trail_id: remoteEntry.trail_id,
                             },
                         }
                     );
