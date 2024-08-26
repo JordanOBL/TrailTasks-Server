@@ -2583,13 +2583,13 @@ app.get('/pull', async (req, res) => {
             deleted: [],
           },
           users_achievements: {
-            created: createdUserAchievements,
-            updated: [],
+            created: [],
+            updated: createdUserAchievements,
             deleted: [],
           },
           users_purchased_trails: {
-            created: createdUserPurchasedTrails,
-            updated: [],
+            created: [],
+            updated: createdUserPurchasedTrails,
             deleted: [],
           },
           users_sessions: {
@@ -2777,7 +2777,7 @@ app.post('/push', async (req, res) => {
 const connect = async () => {
   try {
   //await SYNC({force: true});
-  await SYNC();
+  await SYNC({force: false});
     console.log(
       'SERVER - connected to Postgres database trailtasks viia Sequelize!'
     );

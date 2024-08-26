@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "author": "Jordan",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "build": "npm run build-js",
