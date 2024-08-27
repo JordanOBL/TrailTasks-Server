@@ -12,12 +12,11 @@ import {
   Trail,
   User,
   User_Achievement,
-  User_Miles,
   User_Purchased_Trail,
   User_Session,
 } from './db/sequelizeModel.js';
 // import pool from "./db/config.js";
-import {Sequelize, Op} from 'sequelize';
+import {Sequelize, Op, QueryTypes} from 'sequelize';
 import achievementsWithIds from './assets/Achievements/addAchievementIds.js';
 import bodyparser from 'body-parser';
 import cors from 'cors';
@@ -46,7 +45,7 @@ export const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER,
 });
 
 const app = express();
-
+app.use(express.json());
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended: true}));
 app.use('*', cors());
@@ -63,14 +62,13 @@ const findUser = async (req, res, next) => {
 
     // Set userId in res.locals
     if (user) {
-      const userMiles = await User_Miles.findOne({ where: { user_id: user.id } });
+
       const userSubscription = await Subscription.findOne({ where: { user_id: user.id } });
       const userSessions = await User_Session.findAll({ where: { user_id: user.id } });
       const userPurchasedTrails = await User_Purchased_Trail.findAll({ where: { user_id: user.id } });
       const userAchievements = await User_Achievement.findAll({ where: { user_id: user.id } });
       const completedHikes = await Completed_Hike.findAll({where: {user_id: user.id}});
       res.locals.user = user;
-      res.locals.userMiles = userMiles;
       res.locals.userSubscription = userSubscription;
       res.locals.userSessions = userSessions;
       res.locals.userPurchasedTrails = userPurchasedTrails;
@@ -79,7 +77,6 @@ const findUser = async (req, res, next) => {
 
     } else {
       res.locals.user = null;
-      res.locals.userMiles = null;
       res.locals.userSubscription = null;
       res.locals.userSessions = null;
       res.locals.userPurchasedTrails = null;
@@ -97,19 +94,89 @@ const findUser = async (req, res, next) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+const getGlobalLeaderboards = async (req, res, next) => {
+    const { query } = req.body;
 
+    if (!query) {
+        return next(new Error('No Query Found'));
+    }
+
+    try {
+        const [results, metadata] = await sequelize.query(query);
+
+        if (results && results.length > 0) {
+            res.locals.top100Rankings = results;
+            console.log('Global Leaderboards:', results);
+        } else {
+            res.locals.top100Rankings = []; // Handle the case where no results are found
+            console.log('No data found for the query');
+        }
+
+        return next();
+
+    } catch (err) {
+        console.error('Error in getGlobalLeaderboards:', err); // Improved error logging
+        return next({ err, message: 'Error in server getGlobalLeaderboards' });
+    }
+}
+const getUserRank = async (req, res, next) => {
+    const { userId } = req.body;
+    if (!userId) {
+        return next(new Error('No User'));
+    }
+    try {
+        const [results] = await sequelize.query(`
+            WITH RankedUsers AS (
+                SELECT
+                    users.id AS user_id,
+                    users.username,
+                    users.total_miles,
+                    RANK() OVER (ORDER BY users.total_miles DESC) AS rank
+                FROM users
+            )
+            SELECT *
+            FROM RankedUsers
+            WHERE user_id = :user_id;
+        `, {
+            replacements: [userId], // Pass userId as a parameter
+            // Ensures results are returned as objects
+        });
+
+        if (results.length > 0) {
+            res.locals.userRank = results[0]; // Since you're likely getting an array, take the first item
+            console.log(results[0]); // Log the user's rank
+        } else {
+            res.locals.userRank = null;
+            console.log('User not found');
+        }
+        return next();
+
+    } catch (err) {
+        return next({ err, message: 'Error in server getLeaderboards' });
+    }
+}
 app.post('/api/users', findUser, async (req, res, next) => {
   const { user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements, completedHikes} = res.locals;
 
   if (user) {
     // Respond with userId if found
-    return res.status(200).json({ user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements, completedHikes });
+    return res.status(200).json({ user, userSubscription, userSessions, userPurchasedTrails, userAchievements, completedHikes });
   } else {
     // Respond with a 404 status code if user not found
     return res.status(404).json({ message: 'User not found' });
   }
 });
 
+app.post('/api/leaderboards', getGlobalLeaderboards, getUserRank, async (req, res, next)=>{
+    const {top100Rankings, userRank} = res.locals;
+    if (top100Rankings && userRank) {
+        // Respond with userId if found
+        return res.status(200).json({top100Rankings,userRank});
+    } else {
+        // Respond with a 404 status code if user not found
+        return res.status(404).json({ message: 'No Data Found' });
+    }
+})
 
 app.get('/api/seed', async (req, res) => {
   console.log('seeding postgres table...');
@@ -2429,13 +2496,7 @@ app.get('/pull', async (req, res) => {
           },
         },
       });
-      const createdUserMiles = await User_Miles.findAll({
-        where: {
-          createdAt: {
-            [Sequelize.Op.gt]: lastPulledAt,
-          },
-        },
-      });
+
       const createdTrails = await Trail.findAll({
         where: {
           createdAt: {
@@ -2530,15 +2591,7 @@ app.get('/pull', async (req, res) => {
           user_id: userId,
         },
       });
-      const updatedUserMiles = await User_Miles.findAll({
-        where: {
-          updatedAt: {
-            [Sequelize.Op.gt]: lastPulledAt,
-          },
-          user_id: userId,
-        },
-        
-      });
+
       const updatedTrails = await Trail.findAll({
         where: {
           updatedAt: {
@@ -2575,11 +2628,6 @@ app.get('/pull', async (req, res) => {
           users_subscriptions: {
             created: [],
             updated: updatedSubscriptions.length ? updatedSubscriptions : [],
-            deleted: [],
-          },
-          users_miles: {
-            created: [],
-            updated: updatedUserMiles.length ? updatedUserMiles : [],
             deleted: [],
           },
           users_achievements: {
@@ -2649,11 +2697,6 @@ app.post('/push', async (req, res) => {
           changes.users_sessions.created, {updateOnDuplicate: ['id']}
         );
       }
-      if (changes?.users_miles?.created[0] !== undefined) {
-        const users_miles = await User_Miles.bulkCreate(
-          changes.users_miles.created, {updateOnDuplicate: ['id']}
-        );
-      }
       if (changes?.users_purchased_trails?.created[0] !== undefined) {
         const users_purchased_trails = await User_Purchased_Trail.bulkCreate(
           changes.users_purchased_trails.created, {updateOnDuplicate: ['id']}
@@ -2681,20 +2724,7 @@ app.post('/push', async (req, res) => {
         });
         await Promise.all(updateQueries);
       }
-      if (changes?.users_miles?.updated[0] !== undefined) {
-        const updateQueries = changes.users_miles.updated.map((remoteEntry) => {
-          //console.log({remoteEntry});
-          return User_Miles.update(
-            {...remoteEntry},
-            {
-              where: {
-                id: remoteEntry.id,
-              },
-            }
-          );
-        });
-        await Promise.all(updateQueries);
-      }
+
       if (changes?.users_sessions?.updated[0] !== undefined) {
         const updateQueries = changes.users_sessions.updated.map(
           (remoteEntry) => {
@@ -2792,4 +2822,6 @@ const connect = async () => {
   }
 };
 
-connect();
+connect().catch(e => {
+    console.error("error in connect server", e)
+});

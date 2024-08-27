@@ -15,7 +15,7 @@ import {DataTypes, Sequelize} from 'sequelize';
 // const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
 import dotenv from 'dotenv'
 dotenv.config({
-    path: `.env`
+    path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
 });
 
 const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER, process.env.PGPASSWORD, {
@@ -120,11 +120,12 @@ export const User = sequelize.define(
       allowNull: false,
       defaultValue: 'light',
     },
+      total_miles:{type: DataTypes.STRING, defaultValue: '0.00'},
     trail_id: {type: DataTypes.STRING, allowNull: false, defaultValue: '1'},
     trail_progress: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 0.0,
+      defaultValue: '0.00',
     },
     trail_started_at: {type: DataTypes.STRING, allowNull: false},
     trail_tokens: {type: DataTypes.INTEGER, allowNull: false},
@@ -136,7 +137,7 @@ export const User = sequelize.define(
       // Create a unique index on field
       {
         unique: true,
-        fields: ['username', 'email', 'id'],
+        fields: ['username', 'email', 'id', 'total_miles']
       },
     ],
   }
@@ -276,25 +277,6 @@ export const User_Purchased_Trail = sequelize.define(
   }
 );
 
-export const User_Miles = sequelize.define(
-  'User_Miles',
-  {
-    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
-
-    total_miles: {type: DataTypes.DECIMAL, allowNull: false},
-  },
-  {
-    tableName: 'users_miles',
-    underscored: true,
-    indexes: [
-      // Create a unique index on field
-      {
-        unique: true,
-        fields: ['user_id'],
-      },
-    ],
-  }
-);
 export const User_Badge = sequelize.define(
   'User_Badge',
   {
@@ -373,9 +355,6 @@ Trail.hasMany(User, {foreignKey: 'trail_id'});
 
 Session_Category.hasOne(User_Session, {foreignKey: 'session_category_id'});
 User_Session.belongsTo(Session_Category);
-
-User.hasOne(User_Miles, {foreignKey: 'user_id'});
-User_Miles.belongsTo(User, {foreignKey: 'user_id'});
 
 Park.hasOne(Park_State, {foreignKey: 'park_id'});
 Park_State.belongsTo(Park);
