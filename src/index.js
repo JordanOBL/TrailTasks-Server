@@ -95,7 +95,7 @@ const findUser = async (req, res, next) => {
   }
 };
 const getGlobalLeaderboards = async (req, res, next) => {
-    const query = 'SELECT users.username, users.total_miles FROM users ' +
+    const query = 'SELECT users.username, CAST(users.total_miles AS DOUBLE PRECISION)  FROM users ' +
         'ORDER BY users.total_miles DESC ' +
         'LIMIT 100;'
 
@@ -129,7 +129,7 @@ const getUserRank = async (req, res, next) => {
                     users.id AS user_id,
                     users.username,
                     users.total_miles,
-                    RANK() OVER (ORDER BY users.total_miles DESC) AS rank
+                    RANK() OVER (ORDER BY CAST(users.total_miles AS DOUBLE PRECISION) DESC) AS rank
                 FROM users
             )
             SELECT *
@@ -2717,7 +2717,7 @@ app.post('/push', async (req, res) => {
       if (changes?.users?.updated[0] !== undefined) {
         const updateQueries = changes.users.updated.map((remoteEntry) => {
           //console.log({remoteEntry});
-          return User.update(remoteEntry, {
+          return User.update({...remoteEntry}, {
             where: {
               id: remoteEntry.id,
             },
@@ -2777,7 +2777,7 @@ app.post('/push', async (req, res) => {
         if (changes?.completed_hikes?.updated[0] !== undefined) {
             const updateQueries = changes.completed_hikes.updated.map(
                 (remoteEntry) => {
-                    console.log({remoteEntry});
+
                     return Completed_Hike.update(
                         {...remoteEntry},
                         {
@@ -2807,8 +2807,8 @@ app.post('/push', async (req, res) => {
 
 const connect = async () => {
   try {
-    await SYNC({force: true});
-  //await SYNC({force: false});
+    //await SYNC({force: true});
+  await SYNC({force: false});
     console.log(
       'SERVER - connected to Postgres database trailtasks viia Sequelize!'
     );
