@@ -95,11 +95,9 @@ const findUser = async (req, res, next) => {
   }
 };
 const getGlobalLeaderboards = async (req, res, next) => {
-    const { query } = req.body;
-
-    if (!query) {
-        return next(new Error('No Query Found'));
-    }
+    const query = 'SELECT users.username, users.total_miles FROM users ' +
+        'ORDER BY users.total_miles DESC ' +
+        'LIMIT 100;'
 
     try {
         const [results, metadata] = await sequelize.query(query);
@@ -125,7 +123,7 @@ const getUserRank = async (req, res, next) => {
         return next(new Error('No User'));
     }
     try {
-        const [results] = await sequelize.query(`
+        const results = await sequelize.query(`
             WITH RankedUsers AS (
                 SELECT
                     users.id AS user_id,
@@ -136,15 +134,18 @@ const getUserRank = async (req, res, next) => {
             )
             SELECT *
             FROM RankedUsers
-            WHERE user_id = :user_id;
-        `, {
-            replacements: [userId], // Pass userId as a parameter
-            // Ensures results are returned as objects
-        });
+            WHERE user_id = $1
+        `,
+            {
+                bind: [userId],
+                type: QueryTypes.SELECT,
+            }// Ensures results are returned as objects
+        );
 
         if (results.length > 0) {
+
             res.locals.userRank = results[0]; // Since you're likely getting an array, take the first item
-            console.log(results[0]); // Log the user's rank
+           // Log the user's rank
         } else {
             res.locals.userRank = null;
             console.log('User not found');
