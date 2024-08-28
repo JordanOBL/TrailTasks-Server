@@ -95,8 +95,8 @@ const findUser = async (req, res, next) => {
   }
 };
 const getGlobalLeaderboards = async (req, res, next) => {
-    const query = 'SELECT users.username, CAST(users.total_miles AS DOUBLE PRECISION)  FROM users ' +
-        'ORDER BY users.total_miles DESC ' +
+    const query = 'SELECT users.username, users.total_miles  FROM users ' +
+        'ORDER BY CAST(users.total_miles AS DOUBLE PRECISION) DESC ' +
         'LIMIT 100;'
 
     try {
