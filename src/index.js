@@ -95,7 +95,7 @@ const findUser = async (req, res, next) => {
   }
 };
 const getGlobalLeaderboards = async (req, res, next) => {
-    const query = 'SELECT users.username, ROUND(CAST(COALESCE(NULLIF(users.total_miles, \'\'), \'0.00\') AS DOUBLE PRECISION), 2) AS total_miles  FROM users ' +
+    const query = 'SELECT users.username, CAST(COALESCE(NULLIF(users.total_miles, \'\'), \'0.00\') AS DOUBLE PRECISION) AS total_miles  FROM users ' +
         'WHERE users.total_miles IS NOT NULL ' +
         'ORDER BY CAST(users.total_miles AS DOUBLE PRECISION) DESC ' +
         'LIMIT 100;'
