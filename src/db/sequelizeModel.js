@@ -1,12 +1,12 @@
 import {DataTypes, Sequelize} from 'sequelize';
 
 
- //const PGUSER = 'jordan';
+//const PGUSER = 'jordan';
 //const PGHOST = '192.168.1.208';
- //const PGHOST = 'localhost';
- //const PGDBNAME = 'trailtasks';
- //const PGPORT = 5433;
- //const PGPASSWORD = '4046';
+//const PGHOST = 'localhost';
+//const PGDBNAME = 'trailtasks';
+//const PGPORT = 5433;
+//const PGPASSWORD = '4046';
 //railway.app pgdatabase
 // const PGUSER = 'postgres';
 // const PGHOST = "monorail.proxy.rlwy.net";
@@ -15,7 +15,7 @@ import {DataTypes, Sequelize} from 'sequelize';
 // const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
 import dotenv from 'dotenv'
 dotenv.config({
-    path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
 });
 
 const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER, process.env.PGPASSWORD, {
@@ -23,12 +23,12 @@ const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER, proces
   port: process.env.PGPORT,
   password: process.env.PGPASSWORD,
   dialect: 'postgres',
- // dialectOptions: {
- //   ssl: {
- //     require: true,
- //     rejectUnauthorized: false,
- //   },
- // },
+  // dialectOptions: {
+  //   ssl: {
+  //     require: true,
+  //     rejectUnauthorized: false,
+  //   },
+  // },
 });
 
 export const Park = sequelize.define(
@@ -120,7 +120,7 @@ export const User = sequelize.define(
       allowNull: false,
       defaultValue: 'light',
     },
-      total_miles:{type: DataTypes.STRING, defaultValue: '0.00'},
+    total_miles:{type: DataTypes.STRING, defaultValue: '0.00'},
     trail_id: {type: DataTypes.STRING, allowNull: false, defaultValue: '1'},
     trail_progress: {
       type: DataTypes.STRING,
@@ -335,6 +335,16 @@ export const User_Session = sequelize.define(
   }
 );
 
+export const Session_Addon = sequelize.define(
+  'Session_Addon',
+  {
+    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+    session_id: {type: DataTypes.STRING, allowNull: false},
+    addon_id: {type: DataTypes.STRING, allowNull: false},
+  },
+  {tableName: 'sessions_addons', underscored: true}
+)
+
 export const Subscription = sequelize.define(
   'Subscription',
   {
@@ -350,6 +360,40 @@ export const Subscription = sequelize.define(
   {tableName: 'users_subscriptions'}
 );
 
+export const Addon = sequelize.define(
+  'Addon',
+  {
+    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+    name: {type: DataTypes.STRING, allowNull: false},
+    description: {type: DataTypes.STRING, allowNull: false},
+    level: {type: DataTypes.INTEGER, allowNull: false},
+    price: {type: DataTypes.INTEGER, allowNull: false},
+    image_url: {type: DataTypes.STRING, allowNull: true},
+    required_total_miles: {type: DataTypes.DOUBLE, allowNull: false},
+    effect_type: {type: DataTypes.STRING, allowNull: false},
+    effect_value: {type: DataTypes.DOUBLE, allowNull: false},
+  },
+  {tableName: 'addons', indexes: [{fields: ['level', 'effect_value', 'required_total_miles']}]},
+);
+
+export const User_Addon = sequelize.define(
+  'User_Addon',
+  {
+    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+    user_id: {type: DataTypes.STRING, allowNull: false},
+    addon_id: {type: DataTypes.STRING, allowNull: false},
+    quantity: {type: DataTypes.INTEGER, allowNull: false},
+  },
+  {tableName: 'users_addons',
+    underscored: true,
+    indexes: [
+      // Create a unique index on field
+      {
+        fields: ['user_id'],
+      },
+    ],
+  }
+);
 User.belongsTo(Trail, {foreignKey: 'trail_id'});
 Trail.hasMany(User, {foreignKey: 'trail_id'});
 
@@ -384,16 +428,31 @@ Completed_Hike.belongsTo(Trail, {foreignKey: 'trail_id'});
 User.belongsToMany(Trail, {through: 'queued_trails'});
 Trail.belongsToMany(User, {through: 'queued_trails'});
 
-User.hasMany(User_Session, {foriegnKey: 'user_id'});
-User_Session.belongsTo(User);
-
 User_Purchased_Trail.belongsTo(User, {foreignKey: 'user_id'});
 User.hasMany(User_Purchased_Trail, {foreignKey: 'user_id'});
 
 User_Purchased_Trail.belongsTo(Trail, {foreignKey: 'trail_id'});
 
-// User.belongsToMany(Trail, {through: 'users_purchased_trails'});
-// Trail.belongsToMany(User, {through: 'users_purchased_trails'});
+// User has many User_Addons
+User.hasMany(User_Addon, { foreignKey: 'user_id' });
+User_Addon.belongsTo(User, { foreignKey: 'user_id' });
+
+// User_Addon belongs to an Addon
+User_Addon.belongsTo(Addon, { foreignKey: 'addon_id' });
+Addon.hasMany(User_Addon, { foreignKey: 'addon_id' });
+
+// User has many User_Sessions
+User.hasMany(User_Session, { foreignKey: 'user_id' });
+User_Session.belongsTo(User, { foreignKey: 'user_id' });
+
+// User_Session has many Session_Addons
+User_Session.hasMany(Session_Addon, { foreignKey: 'session_id' });
+Session_Addon.belongsTo(User_Session, { foreignKey: 'session_id' });
+
+// Session_Addon belongs to an Addon
+Session_Addon.belongsTo(Addon, { foreignKey: 'addon_id' });
+Addon.hasMany(Session_Addon, { foreignKey: 'addon_id' });
+
 
 Subscription.hasOne(User, {foreignKey: 'user_id'});
 User.belongsTo(Subscription, {key: 'id'});
