@@ -2914,7 +2914,7 @@ app.post('/push', async (req, res) => {
 
 const connect = async () => {
     try {
-       //await SYNC({force: true});
+       await SYNC({force: true});
        // await SYNC({force: false, alter: true});
         console.log(
             'SERVER - connected to Postgres database trailtasks viia Sequelize!'
