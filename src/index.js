@@ -2725,7 +2725,7 @@ app.get('/pull', async (req, res) => {
                 timestamp: Date.now(),
             };
 
-            //console.log('responseData from pull', responseData);
+            console.log('responseData from pull', responseData);
             return res.json(responseData);
         }
     } catch (err) {
