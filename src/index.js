@@ -28,7 +28,8 @@ import express from 'express';
 import masterAchievementList from './assets/Achievements/masterAchievementList.js';
 import sessionCategories from './helpers/Session/sessionCategories.js';
 import dotenv from 'dotenv';
-
+import cron from 'node-cron';
+import {exec} from 'child_process';
 // Load environment variables from the correct file based on the environment
 dotenv.config({
     path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
@@ -56,6 +57,38 @@ app.use('*', cors());
 
 //app.use("/api/sync", router);
 //
+//Cron Scheduler for Changing Free Trails each month
+cron.schedule('30 2 * * 6', () => {
+  console.log('Running Free Trail ReRoll Cron');
+  exec('./cron/programs/rerollFreeTrails', (err, stdout, stderr) => {
+    if (err) {
+      console.error(`Error running Free Trail ReRoll Cron : ${err.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Stderr from Free Trail ReRoll Cron ${stderr}`);
+      return;
+    }
+    console.log(`Output from Free Trail ReRoll Cron ${stdout}`);
+  });
+});
+
+//Cron Scheduler for Changing Trail of the week 
+cron.schedule('30 2 * * 6', () => {
+  console.log('Running Trail of The Week ReRoll Cron');
+  exec('./cron/programs/rerollTrailOfTheWeek', (err, stdout, stderr) => {
+    if (err) {
+      console.error(`Error running Trail Of the Week Cron : ${err.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Stderr from Trail Of the Week Cron ${stderr}`);
+      return;
+    }
+    console.log(`Output from Trail Of The Week Cron ${stdout}`);
+  });
+});
+
 const findUser = async (req, res, next) => {
     const { email, password } = req.body;
 
@@ -5161,9 +5194,8 @@ async function seedDatabase(){
 }
 const connect = async () => {
     try {
-       await SYNC({force: true});
        // await SYNC({force: false, alter: true});
-       await seedDatabase()
+       //await seedDatabase()
         console.log(
             'SERVER - connected to Postgres database trailtasks viia Sequelize!'
         );
