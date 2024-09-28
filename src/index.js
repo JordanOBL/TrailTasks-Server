@@ -59,9 +59,9 @@ app.use('*', cors());
 console.log(`Current working directory: ${process.cwd()}`);
 
 //Cron Scheduler for Changing Free Trails each month
-cron.schedule('42 2 * * 6', () => {
+cron.schedule('57 2 * * 6', () => {
   console.log('Running Free Trail ReRoll Cron');
-  exec('./cron/programs/rerollFreeTrails', (err, stdout, stderr) => {
+  exec('./src/cron/programs/rerollFreeTrails', (err, stdout, stderr) => {
     if (err) {
       console.error(`Error running Free Trail ReRoll Cron : ${err.message}`);
       return;
@@ -75,9 +75,9 @@ cron.schedule('42 2 * * 6', () => {
 }, {timezone: "America/New_York"});
 
 //Cron Scheduler for Changing Trail of the week 
-cron.schedule('42 2 * * 6', () => {
+cron.schedule('57 2 * * 6', () => {
   console.log('Running Trail of The Week ReRoll Cron');
-  exec('./cron/programs/rerollTrailOfTheWeek', (err, stdout, stderr) => {
+  exec('./src/cron/programs/rerollTrailOfTheWeek', (err, stdout, stderr) => {
     if (err) {
       console.error(`Error running Trail Of the Week Cron : ${err.message}`);
       return;
