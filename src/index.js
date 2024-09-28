@@ -58,7 +58,7 @@ app.use('*', cors());
 //app.use("/api/sync", router);
 //
 //Cron Scheduler for Changing Free Trails each month
-cron.schedule('30 2 * * 6', () => {
+cron.schedule('36 2 * * 6', () => {
   console.log('Running Free Trail ReRoll Cron');
   exec('./cron/programs/rerollFreeTrails', (err, stdout, stderr) => {
     if (err) {
@@ -71,10 +71,10 @@ cron.schedule('30 2 * * 6', () => {
     }
     console.log(`Output from Free Trail ReRoll Cron ${stdout}`);
   });
-});
+}, {timezone: "America/New_York"});
 
 //Cron Scheduler for Changing Trail of the week 
-cron.schedule('30 2 * * 6', () => {
+cron.schedule('36 2 * * 6', () => {
   console.log('Running Trail of The Week ReRoll Cron');
   exec('./cron/programs/rerollTrailOfTheWeek', (err, stdout, stderr) => {
     if (err) {
@@ -87,7 +87,7 @@ cron.schedule('30 2 * * 6', () => {
     }
     console.log(`Output from Trail Of The Week Cron ${stdout}`);
   });
-});
+}, {timezone: "America/New_York"});
 
 const findUser = async (req, res, next) => {
     const { email, password } = req.body;
