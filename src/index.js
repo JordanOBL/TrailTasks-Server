@@ -56,7 +56,8 @@ app.use(bodyparser.urlencoded({extended: true}));
 app.use('*', cors());
 
 //app.use("/api/sync", router);
-//
+console.log(`Current working directory: ${process.cwd()}`);
+
 //Cron Scheduler for Changing Free Trails each month
 cron.schedule('42 2 * * 6', () => {
   console.log('Running Free Trail ReRoll Cron');
