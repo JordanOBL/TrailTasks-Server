@@ -58,7 +58,7 @@ app.use('*', cors());
 //app.use("/api/sync", router);
 //
 //Cron Scheduler for Changing Free Trails each month
-cron.schedule('39 2 * * 6', () => {
+cron.schedule('42 2 * * 6', () => {
   console.log('Running Free Trail ReRoll Cron');
   exec('./cron/programs/rerollFreeTrails', (err, stdout, stderr) => {
     if (err) {
@@ -74,7 +74,7 @@ cron.schedule('39 2 * * 6', () => {
 }, {timezone: "America/New_York"});
 
 //Cron Scheduler for Changing Trail of the week 
-cron.schedule('39 2 * * 6', () => {
+cron.schedule('42 2 * * 6', () => {
   console.log('Running Trail of The Week ReRoll Cron');
   exec('./cron/programs/rerollTrailOfTheWeek', (err, stdout, stderr) => {
     if (err) {
