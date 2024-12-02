@@ -1,5 +1,5 @@
 
-const Addons = [
+const InitialAddons = [
 	{
 		id:'1',
 		name: 'Hiking Poles I',
@@ -62,7 +62,6 @@ const Addons = [
 		required_total_miles: 50,
 		image_url: 'WaterBottle2.png',
 		price: 50,
-		image_url: 'WaterBottle2.png',
 		created_at: Date.now(),
 		updated_at: Date.now(),
 	},
@@ -74,7 +73,6 @@ const Addons = [
 		effect_type: 'break_time_reduction',
 		effect_value: 0, // Break time skipped
 		required_total_miles: 100,
-		image_url: 'WaterBottle3.png',
 		price: 100,
 		image_url: 'WaterBottle3.png',
 		created_at: Date.now(),
@@ -279,4 +277,4 @@ const Addons = [
 
 ];
 
-export default Addons;
+export default InitialAddons;

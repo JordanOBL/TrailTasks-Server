@@ -1,4 +1,4 @@
-const sessionCategories = [
+const initialSessionCategories = [
   {id: '1', session_category_name: 'Chores'},
   {id: '2', session_category_name: 'Cooking'},
   {id: '3', session_category_name: 'Crafts'},
@@ -32,4 +32,4 @@ const sessionCategories = [
   {id: '31', session_category_name: 'Volunteering'},
   {id: '32', session_category_name: 'Yoga'},
 ];
-export default sessionCategories;
+export default initialSessionCategories;

@@ -156,6 +156,8 @@ export const Badge = sequelize.define(
   'Badge',
   {
     id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+      badge_type: {type: DataTypes.STRING, allowNull: false},
+      park_id: {type: DataTypes.STRING, allowNull: false},
     badge_name: {type: DataTypes.STRING, allowNull: false},
     badge_description: {type: DataTypes.STRING, allowNull: false},
     badge_image_url: {
@@ -170,7 +172,7 @@ export const Badge = sequelize.define(
       // Create a unique index on field
       {
         unique: true,
-        fields: ['badge_name'],
+        fields: ['badge_name', 'park_id'],
       },
     ],
   }
@@ -281,6 +283,11 @@ export const User_Badge = sequelize.define(
   'User_Badge',
   {
     id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+      user_id: {type: DataTypes.STRING, allowNull: false},
+      badge_id: {type: DataTypes.STRING, allowNull: false},
+      quantity: {type: DataTypes.INTEGER, allowNull: false},
+      is_completed: {type: DataTypes.BOOLEAN, allowNull: false},
+      last_redeemed: {type: DataTypes.BOOLEAN, allowNull: false},
   },
   {
     tableName: 'users_badges',
