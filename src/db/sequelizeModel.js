@@ -156,9 +156,10 @@ export const Badge = sequelize.define(
   'Badge',
   {
     id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
-      badge_type: {type: DataTypes.STRING, allowNull: false},
+
       park_id: {type: DataTypes.STRING, allowNull: false},
     badge_name: {type: DataTypes.STRING, allowNull: false},
+      badge_type: {type: DataTypes.STRING, allowNull: false},
     badge_description: {type: DataTypes.STRING, allowNull: false},
     badge_image_url: {
       type: DataTypes.STRING,
