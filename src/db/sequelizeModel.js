@@ -402,6 +402,8 @@ export const User_Addon = sequelize.define(
     ],
   }
 );
+
+
 User.belongsTo(Trail, {foreignKey: 'trail_id'});
 Trail.hasMany(User, {foreignKey: 'trail_id'});
 
@@ -423,8 +425,6 @@ User_Achievement.belongsTo(Achievement);
 // Achievement.belongsToMany(User, {through: 'users_achievements'});
 // User.belongsToMany(Achievement, {through: 'users_achievements'});
 
-Badge.belongsToMany(User, {through: 'users_badges'});
-User.belongsToMany(Badge, {through: 'users_badges'});
 
 // User.belongsToMany(Trail, {through: 'completed_hikes'});
 // Trail.belongsToMany(User, {through: 'completed_hikes'});
@@ -456,6 +456,13 @@ User_Session.belongsTo(User, { foreignKey: 'user_id' });
 // User_Session has many Session_Addons
 User_Session.hasMany(Session_Addon, { foreignKey: 'session_id' });
 Session_Addon.belongsTo(User_Session, { foreignKey: 'session_id' });
+
+User.hasMany(User_Badge, { foreignKey: 'user_id' });
+User_Badge.belongsTo(User, { foreignKey: 'user_id' });
+
+Park.hasOne(Badge, { foreignKey: 'park_id' });
+Badge.belongsTo(Park, { foreignKey: 'park_id' });
+
 
 // Session_Addon belongs to an Addon
 Session_Addon.belongsTo(Addon, { foreignKey: 'addon_id' });
