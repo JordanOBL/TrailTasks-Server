@@ -234,7 +234,7 @@ export const Users_Queued_Trail = sequelize.define(
     user_id: {type: DataTypes.STRING, allowNull: false},
     trail_id: {type: DataTypes.STRING, allowNull: false},
   },
-  {tableName:; 'users_queued_trails', underscored: true}
+  {tableName: 'users_queued_trails', underscored: true}
 );
 export const User_Purchased_Trail = sequelize.define(
   'User_Purchased_Trail',
