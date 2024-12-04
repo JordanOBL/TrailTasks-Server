@@ -5,7 +5,7 @@ import {
     Achievement,
     Addon,
     Park,
-    Completed_Hike,
+    User_Completed_Trail,
     Park_State,
     SYNC,
     Session_Category,
@@ -16,8 +16,8 @@ import {
     User_Achievement,
     User_Purchased_Trail,
     User_Session,
-    Session_Addon, Badge,
-    User_Badge
+    Session_Addon,
+    User_Park
 } from './db/sequelizeModel.js';
 // import pool from "./db/config.js";
 
@@ -30,7 +30,6 @@ import masterAchievementList from './assets/Achievements/masterAchievementList.j
 import dotenv from 'dotenv';
 import cron from 'node-cron';
 import {exec} from 'child_process';
-import InitialBadges from "./helpers/Badges/InitialBadges";
 import InitialParks from "./helpers/Parks/InitialParks";
 import InitialParkStates from "./helpers/ParkState/InitialParkStates";
 import InitialAddons from "./helpers/Addons/InitialAddons.js";
@@ -112,13 +111,13 @@ const findUser = async (req, res, next) => {
             const userSessions = await User_Session.findAll({ where: { user_id: user.id } });
             const userPurchasedTrails = await User_Purchased_Trail.findAll({ where: { user_id: user.id } });
             const userAchievements = await User_Achievement.findAll({ where: { user_id: user.id } });
-            const completedHikes = await Completed_Hike.findAll({where: {user_id: user.id}});
+            const usersCompletedTrails = await User_Completed_Trail.findAll({where: {user_id: user.id}});
             res.locals.user = user;
             res.locals.userSubscription = userSubscription;
             res.locals.userSessions = userSessions;
             res.locals.userPurchasedTrails = userPurchasedTrails;
             res.locals.userAchievements = userAchievements;
-            res.locals.completedHikes = completedHikes;
+            res.locals.usersCompletedTrails = usersCompletedTrails;
 
         } else {
             res.locals.user = null;
@@ -127,7 +126,7 @@ const findUser = async (req, res, next) => {
             res.locals.userPurchasedTrails = null;
             res.locals.userAchievements = null;
             res.locals.userAchievements = null;
-            res.locals.completedHikes = null;
+            res.locals.usersCompletedTrails = null;
 
         }
 
@@ -203,11 +202,11 @@ WHERE user_id = $1
     }
 }
 app.post('/api/users', findUser, async (req, res, next) => {
-    const { user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements, completedHikes} = res.locals;
+    const { user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements, usersCompletedTrails} = res.locals;
 
     if (user) {
         // Respond with userId if found
-        return res.status(200).json({ user, userSubscription, userSessions, userPurchasedTrails, userAchievements, completedHikes });
+        return res.status(200).json({ user, userSubscription, userSessions, userPurchasedTrails, userAchievements, usersCompletedTrails });
     } else {
         // Respond with a 404 status code if user not found
         return res.status(404).json({ message: 'User not found' });
@@ -250,7 +249,6 @@ app.get('/api/seed', async (req, res) => {
         await Addon.bulkCreate(
             InitialAddons,{ignoreDuplicates: true}
         )
-        await Badge.bulkCreate(InitialBadges, {ignoreDuplicates: true})
         console.log('Seeding Server Successful');
         return res.status(200).json({message: 'Seeding Server Successful'});
     } catch (err) {
@@ -289,8 +287,6 @@ app.get('/pull', async (req, res) => {
 
             const createdSessionCategories = await Session_Category.findAll({});
 
-            const createdBadges = await Badge.findAll({});
-
             const responseData = {
                 changes: {
                     addons: {
@@ -323,11 +319,7 @@ app.get('/pull', async (req, res) => {
                         updated:  createdSessionCategories,
                         deleted: [],
                     },
-                    badges: {
-                        created:[],
-                        updated:  createdBadges,
-                        deleted:[],
-                    }
+
                 },
                 timestamp: Date.now(),
             };
@@ -396,14 +388,8 @@ app.get('/pull', async (req, res) => {
                     user_id: userId,
                 },
             });
-            const createdBadges = await Badge.findAll({
-                where: {
-                    createdAt: {
-                        [Sequelize.Op.gt]: lastPulledAt,
-                    },
-                },
-            });
-            const createdUserBadges = await User_Badge.findAll({
+         
+            const createdUserParks = await User_Park.findAll({
                 where: {
                     createdAt: {
                         [Sequelize.Op.gt]: lastPulledAt,
@@ -411,6 +397,7 @@ app.get('/pull', async (req, res) => {
                     user_id: userId,
                 },
             });
+
             const createdUserSessions = await User_Session.findAll({
                 where: {
                     createdAt: {
@@ -442,7 +429,7 @@ app.get('/pull', async (req, res) => {
                 },
             });
 
-            const createdCompletedHikes = await Completed_Hike.findAll({
+            const createdUserCompletedTrails = await User_Completed_Trail.findAll({
                 where: {
                     updatedAt: {
                         [Sequelize.Op.gt]: lastPulledAt,
@@ -490,14 +477,7 @@ app.get('/pull', async (req, res) => {
                     user_id: userId,
                 },
             })
-            const updatedBadges = await Badge.findAll({
-                where: {
-                    updatedAt: {
-                        [Sequelize.Op.gt]: lastPulledAt,
-                    },
-                },
-            })
-            const updatedUserBadges = await User_Badge.findAll({
+              const updatedUserParks = await User_Park.findAll({
                 where: {
                     updatedAt: {
                         [Sequelize.Op.gt]: lastPulledAt,
@@ -521,7 +501,7 @@ app.get('/pull', async (req, res) => {
                     },
                 },
             });
-            const updatedCompletedHikes = await Completed_Hike.findAll({
+            const updatedUserCompletedTrails = await User_Completed_Trail.findAll({
                 where: {
                     updatedAt: {
                         [Sequelize.Op.gt]: lastPulledAt,
@@ -552,19 +532,14 @@ app.get('/pull', async (req, res) => {
                     updated: [...createdUserAddons, ...updatedUserAddons],
                     deleted: [],
                 },
-                    completed_hikes: {
+                    users_completed_trails: {
                         created: [],
-                        updated: updatedCompletedHikes.length ? updatedCompletedHikes : [],
+                        updated: updatedUserCompletedTrails.length ? updatedUserCompletedTrails : [],
                         deleted: [],
                     },
-                    badges: {
+                    users_parks:{
                         created: [],
-                        updated: createdBadges.length ? createdBadges : [],
-                        deleted: [],
-                    },
-                    users_badges:{
-                        created: [],
-                        updated: createdUserBadges.length ? createdUserBadges : [],
+                        updated: createdUserParks.length ? createdUserParks : [],
                         deleted: [],
                     },
                     users_subscriptions: {
@@ -639,9 +614,9 @@ app.post('/push', async (req, res) => {
                     changes.users_addons.created, {updateOnDuplicate: ['id']}
                 );
             }
-            if (changes?.users_badges?.created[0] !== undefined) {
-                const users_addons = await User_Badge.bulkCreate(
-                    changes.users_badges.created, {updateOnDuplicate: ['id']}
+            if (changes?.users_parks?.created[0] !== undefined) {
+                const users_parks = await User_Park.bulkCreate(
+                    changes.users_parks.created, {updateOnDuplicate: ['id']}
                 );
             }
             if (changes?.users_sessions?.created[0] !== undefined) {
@@ -664,9 +639,9 @@ app.post('/push', async (req, res) => {
                     changes.users_subscriptions.created, {updateOnDuplicate: ['id']}
                 );
             }
-            if (changes?.completed_hikes?.created[0] !== undefined) {
-                const completed_hikes = await Completed_Hike.bulkCreate(
-                    changes.completed_hikes.created, {updateOnDuplicate: ['id']}
+            if (changes?.users_completed_trails?.created[0] !== undefined) {
+                const users_completed_trails = await User_Completed_Trail.bulkCreate(
+                    changes.users_completed_trails.created, {updateOnDuplicate: ['id']}
                 );
             }
             //updates to created rows in pg database
@@ -716,11 +691,11 @@ app.post('/push', async (req, res) => {
                 await Promise.all(updateQueries);
             }
 
-            if (changes?.users_badges?.updated[0] !== undefined) {
-                const updateQueries = changes.users_badges.updated.map(
+            if (changes?.users_parks?.updated[0] !== undefined) {
+                const updateQueries = changes.users_parks.updated.map(
                     (remoteEntry) => {
                         //console.log({remoteEntry});
-                        return User_Badge.update(
+                        return User_Park.update(
                             {...remoteEntry},
                             {
                                 where: {
@@ -782,11 +757,11 @@ app.post('/push', async (req, res) => {
                 );
                 await Promise.all(updateQueries);
             }
-            if (changes?.completed_hikes?.updated[0] !== undefined) {
-                const updateQueries = changes.completed_hikes.updated.map(
+            if (changes?.users_completed_trails?.updated[0] !== undefined) {
+                const updateQueries = changes.users_completed_trails.updated.map(
                     (remoteEntry) => {
 
-                        return Completed_Hike.update(
+                        return User_Completed_Trail.update(
                             {...remoteEntry},
                             {
                                 where: {
@@ -853,7 +828,6 @@ async function seedDatabase(){
             await Addon.bulkCreate(
                 InitialAddons,{ignoreDuplicates: true}
             )
-            await Badge.bulkCreate(InitialBadges, {ignoreDuplicates: true})
 
             console.log('Seeding Server Successful');
         } catch (err) {

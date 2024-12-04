@@ -129,6 +129,7 @@ export const User = sequelize.define(
     },
     trail_started_at: {type: DataTypes.STRING, allowNull: false},
     trail_tokens: {type: DataTypes.INTEGER, allowNull: false},
+    prestige_level: {type: DataTypes.INTEGER, allowNull: false, defaultValue: 0},
   },
   {
     tableName: 'users',
@@ -151,32 +152,6 @@ export const Park_State = sequelize.define(
     state: {type: DataTypes.STRING, allowNull: false},
   },
   {tableName: 'park_states', underscored: true}
-);
-export const Badge = sequelize.define(
-  'Badge',
-  {
-    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
-
-      park_id: {type: DataTypes.STRING, allowNull: false},
-    badge_name: {type: DataTypes.STRING, allowNull: false},
-      badge_type: {type: DataTypes.STRING, allowNull: false},
-    badge_description: {type: DataTypes.STRING, allowNull: true},
-    badge_image_url: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-  },
-  {
-    tableName: 'badges',
-    underscored: true,
-    indexes: [
-      // Create a unique index on field
-      {
-        unique: true,
-        fields: ['badge_name', 'park_id'],
-      },
-    ],
-  }
 );
 export const Achievement = sequelize.define(
   'Achievement',
@@ -232,16 +207,17 @@ export const User_Achievement = sequelize.define(
     ],
   }
 );
-export const Completed_Hike = sequelize.define(
-  'Completed_Hike',
+export const User_Completed_Trail = sequelize.define(
+  'User_Completed_Trail',
   {
     id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
     first_completed_at: {type: DataTypes.STRING, allowNull: false},
     last_completed_at: {type: DataTypes.STRING, allowNull: false},
     best_completed_time: {type: DataTypes.STRING, allowNull: false},
+    completion_count: {type: DataTypes.INTEGER, allowNull: false},
   },
   {
-    tableName: 'completed_hikes',
+    tableName: 'users_completed_trails',
     underscored: true,
     indexes: [
       // Create a unique index on field
@@ -251,14 +227,14 @@ export const Completed_Hike = sequelize.define(
     ],
   }
 );
-export const Queued_Trail = sequelize.define(
-  'Queued_Trail',
+export const Users_Queued_Trail = sequelize.define(
+  'Users_Queued_Trail',
   {
     id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
     user_id: {type: DataTypes.STRING, allowNull: false},
     trail_id: {type: DataTypes.STRING, allowNull: false},
   },
-  {tableName: 'queued_trails', underscored: true}
+  {tableName:; 'users_queued_trails', underscored: true}
 );
 export const User_Purchased_Trail = sequelize.define(
   'User_Purchased_Trail',
@@ -280,27 +256,7 @@ export const User_Purchased_Trail = sequelize.define(
   }
 );
 
-export const User_Badge = sequelize.define(
-  'User_Badge',
-  {
-    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
-      user_id: {type: DataTypes.STRING, allowNull: false},
-      badge_id: {type: DataTypes.STRING, allowNull: false},
-      quantity: {type: DataTypes.INTEGER, allowNull: false},
-      is_completed: {type: DataTypes.BOOLEAN, allowNull: false},
-      last_redeemed: {type: DataTypes.BOOLEAN, allowNull: false},
-  },
-  {
-    tableName: 'users_badges',
-    underscored: true,
-    indexes: [
-      // Create a unique index on field
-      {
-        fields: ['user_id'],
-      },
-    ],
-  }
-);
+
 export const Session_Category = sequelize.define(
   'Session_Category',
   {
@@ -402,7 +358,26 @@ export const User_Addon = sequelize.define(
     ],
   }
 );
-
+export const User_Park = sequelize.define(
+  'User_Park',
+  {
+    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+    user_id: {type: DataTypes.STRING, allowNull: false},
+    park_id: {type: DataTypes.STRING, allowNull: false},
+    park_level: {type: DataTypes.INTEGER, allowNull: false},
+    is_reward_redeemed: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true},
+    last_completed: {type: DataTypes.STRING, allowNull: false},
+  },
+  {tableName: 'users_parks',
+    underscored: true,
+    indexes: [
+      // Create a unique index on field
+      {
+        fields: ['user_id'],
+      },
+    ],
+  }
+)
 
 User.belongsTo(Trail, {foreignKey: 'trail_id'});
 Trail.hasMany(User, {foreignKey: 'trail_id'});
@@ -428,10 +403,10 @@ User_Achievement.belongsTo(Achievement);
 
 // User.belongsToMany(Trail, {through: 'completed_hikes'});
 // Trail.belongsToMany(User, {through: 'completed_hikes'});
-Completed_Hike.belongsTo(User, {foreignKey: 'user_id'});
-User.hasMany(Completed_Hike, {foreignKey: 'user_id'});
+User_Completed_Trail.belongsTo(User, {foreignKey: 'user_id'});
+User.hasMany(User_Completed_Trail, {foreignKey: 'user_id'});
 
-Completed_Hike.belongsTo(Trail, {foreignKey: 'trail_id'});
+User_Completed_Trail.belongsTo(Trail, {foreignKey: 'trail_id'});
 
 User.belongsToMany(Trail, {through: 'queued_trails'});
 Trail.belongsToMany(User, {through: 'queued_trails'});
@@ -457,12 +432,12 @@ User_Session.belongsTo(User, { foreignKey: 'user_id' });
 User_Session.hasMany(Session_Addon, { foreignKey: 'session_id' });
 Session_Addon.belongsTo(User_Session, { foreignKey: 'session_id' });
 
-User.hasMany(User_Badge, { foreignKey: 'user_id' });
-User_Badge.belongsTo(User, { foreignKey: 'user_id' });
 
-Park.hasOne(Badge, { foreignKey: 'park_id' });
-Badge.belongsTo(Park, { foreignKey: 'park_id' });
+User.hasMany(User_Park, { foreignKey: 'user_id' });
+User_Park.belongsTo(User, { foreignKey: 'user_id' });
 
+Park.hasMany(User_Park, { foreignKey: 'park_id' });
+User_Park.belongsTo(Park, { foreignKey: 'park_id' });
 
 // Session_Addon belongs to an Addon
 Session_Addon.belongsTo(Addon, { foreignKey: 'addon_id' });
