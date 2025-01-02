@@ -30,15 +30,15 @@ import masterAchievementList from './assets/Achievements/masterAchievementList.j
 import dotenv from 'dotenv';
 import cron from 'node-cron';
 import {exec} from 'child_process';
-import InitialParks from "./helpers/Parks/InitialParks";
-import InitialParkStates from "./helpers/ParkState/InitialParkStates";
+import InitialParks from "./helpers/Parks/InitialParks.js";
+import InitialParkStates from "./helpers/ParkState/InitialParkStates.js";
 import InitialAddons from "./helpers/Addons/InitialAddons.js";
 import InitialSessionCategories from "./helpers/Session/InitialSessionCategories.js";
-import InitialTrails from "./helpers/Trails/InitialTrails";
-import res from "express/lib/response";
+import InitialTrails from "./helpers/Trails/InitialTrails.js";
+import res from "express/lib/response.js";
 // Load environment variables from the correct file based on the environment
 dotenv.config({
-    path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+    path: process.env.NODE_ENV === 'production' ? '.env.production' :process.env.NODE_ENV === 'development' ? '.env' : '.env.test'
 });
 
 const newAchievements = achievementsWithIds(masterAchievementList);
@@ -67,7 +67,7 @@ console.log(`Current working directory: ${process.cwd()}`);
 //Cron Scheduler for Changing Free Parks each month
 cron.schedule('10 3 * * 6', () => {
   console.log('Running Free Trail ReRoll Cron');
-  exec('./src/cron/programs/rerollFreeTrails', (err, stdout, stderr) => {
+  exec(process.env.REROLL_FREE_TRAILS, (err, stdout, stderr) => {
     if (err) {
       console.error(`Error running Free Trail ReRoll Cron : ${err.message}`);
       return;
@@ -83,7 +83,7 @@ cron.schedule('10 3 * * 6', () => {
 //Cron Scheduler for Changing Trail of the week
 cron.schedule('10 3 * * 6', () => {
   console.log('Running Trail of The Week ReRoll Cron');
-  exec('./src/cron/programs/rerollTrailOfTheWeek', (err, stdout, stderr) => {
+  exec(process.env.REROLL_TRAIL_OF_THE_WEEK, (err, stdout, stderr) => {
     if (err) {
       console.error(`Error running Trail Of the Week Cron : ${err.message}`);
       return;
@@ -124,7 +124,6 @@ const findUser = async (req, res, next) => {
             res.locals.userSubscription = null;
             res.locals.userSessions = null;
             res.locals.userPurchasedTrails = null;
-            res.locals.userAchievements = null;
             res.locals.userAchievements = null;
             res.locals.usersCompletedTrails = null;
 
@@ -202,7 +201,7 @@ WHERE user_id = $1
     }
 }
 app.post('/api/users', findUser, async (req, res, next) => {
-    const { user, userMiles, userSubscription, userSessions, userPurchasedTrails, userAchievements, usersCompletedTrails} = res.locals;
+    const { user, userSubscription, userSessions, userPurchasedTrails, userAchievements, usersCompletedTrails} = res.locals;
 
     if (user) {
         // Respond with userId if found
@@ -223,38 +222,6 @@ app.post('/api/leaderboards', getGlobalLeaderboards, getUserRank, async (req, re
         return res.status(404).json({ message: 'No Data Found' });
     }
 })
-
-app.get('/api/seed', async (req, res) => {
-    console.log('seeding postgres table...');
-    try {
-        await Park.bulkCreate(
-            InitialParks,
-            {ignoreDuplicates: true}
-        );
-        await Park_State.bulkCreate(
-            InitialParkStates,
-            {ignoreDuplicates: true}
-        );
-        await Trail.bulkCreate(
-            InitialTrails, {ignoreDuplicates: true}
-        );
-        await Achievement.bulkCreate(newAchievements, {
-            ignoreDuplicates: true,
-        });
-
-        await Session_Category.bulkCreate(
-            InitialSessionCategories,
-            {ignoreDuplicates: true}
-        );
-        await Addon.bulkCreate(
-            InitialAddons,{ignoreDuplicates: true}
-        )
-        console.log('Seeding Server Successful');
-        return res.status(200).json({message: 'Seeding Server Successful'});
-    } catch (err) {
-        console.log('Error in server seeding pgdb', err);
-    }
-});
 
 const getSafeLastPulledAt = (lastPulledAt) =>
 {
@@ -388,7 +355,7 @@ app.get('/pull', async (req, res) => {
                     user_id: userId,
                 },
             });
-         
+
             const createdUserParks = await User_Park.findAll({
                 where: {
                     createdAt: {
@@ -843,7 +810,33 @@ async function seedDatabase(){
 const connect = async () => {
     try {
         await SYNC({force: true});
-       await seedDatabase()
+        await seedDatabase()
+        //set random free trails
+        exec(process.env.REROLL_FREE_TRAILS, (err, stdout, stderr) => {
+            if (err) {
+                console.error(`Error running Free Trail ReRoll Cron : ${err.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(`Stderr from Free Trail ReRoll Cron ${stderr}`);
+                return;
+            }
+            console.log(`Output from Free Trail ReRoll Cron ${stdout}`);
+        });
+        //set random trail of the week
+        exec(process.env.REROLL_TRAIL_OF_THE_WEEK, (err, stdout, stderr) => {
+            if (err) {
+                console.error(`Error running Trail Of the Week Cron : ${err.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(`Stderr from Trail Of the Week Cron ${stderr}`);
+                return;
+            }
+            console.log(`Output from Trail Of The Week Cron ${stdout}`);
+        });
+
+
         console.log(
             'SERVER - connected to Postgres database trailtasks viia Sequelize!'
         );

@@ -15,7 +15,7 @@ import {DataTypes, Sequelize} from 'sequelize';
 // const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
 import dotenv from 'dotenv'
 dotenv.config({
-  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : process.env.NODE_ENV === 'development' ? '.env' : '.env.test'
 });
 
 const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER, process.env.PGPASSWORD, {
