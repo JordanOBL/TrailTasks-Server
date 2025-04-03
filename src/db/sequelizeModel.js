@@ -15,7 +15,7 @@ import {DataTypes, Sequelize} from 'sequelize';
 // const PGPASSWORD = 'SpFDCqoKArXHeXwSrLruWVzRcZQNcuwL';
 import dotenv from 'dotenv'
 dotenv.config({
-  path: process.env.NODE_ENV === 'production' ? '.env.production' : process.env.NODE_ENV === 'development' ? '.env' : '.env.test'
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : process.env.NODE_ENV === 'development' ? '.env.development' : '.env.test'
 });
 
 const sequelize = new Sequelize(process.env.PGDBNAME, process.env.PGUSER, process.env.PGPASSWORD, {
@@ -121,7 +121,7 @@ export const User = sequelize.define(
       defaultValue: 'light',
     },
     total_miles:{type: DataTypes.STRING, defaultValue: '0.00'},
-    trail_id: {type: DataTypes.STRING, allowNull: false, defaultValue: '1'},
+    trail_id: {type: DataTypes.STRING, allowNull: false},
     trail_progress: {
       type: DataTypes.STRING,
       allowNull: false,

@@ -38,7 +38,7 @@ import InitialTrails from "./helpers/Trails/InitialTrails.js";
 import res from "express/lib/response.js";
 // Load environment variables from the correct file based on the environment
 dotenv.config({
-    path: process.env.NODE_ENV === 'production' ? '.env.production' :process.env.NODE_ENV === 'development' ? '.env' : '.env.test'
+    path: process.env.NODE_ENV === 'production' ? '.env.production' : process.env.NODE_ENV === 'development' ? '.env.development' : '.env.test'
 });
 
 const newAchievements = achievementsWithIds(masterAchievementList);
@@ -97,9 +97,11 @@ cron.schedule('10 3 * * 6', () => {
 }, {timezone: "America/New_York"});
 
 const findUser = async (req, res, next) => {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     try {
+        email = email.toLowerCase();
+        
         // Query the database for the user
         const user = await User.findOne({ where: { email, password } });
         console.log('user from server findUser()', user);
@@ -107,17 +109,21 @@ const findUser = async (req, res, next) => {
         // Set userId in res.locals
         if (user) {
 
-            const userSubscription = await Subscription.findOne({ where: { user_id: user.id } });
+            const userSubscription = await Subscription.findAll({ where: { user_id: user.id } });
             const userSessions = await User_Session.findAll({ where: { user_id: user.id } });
             const userPurchasedTrails = await User_Purchased_Trail.findAll({ where: { user_id: user.id } });
             const userAchievements = await User_Achievement.findAll({ where: { user_id: user.id } });
             const usersCompletedTrails = await User_Completed_Trail.findAll({where: {user_id: user.id}});
+            const userAddons = await User_Addon.findAll({where: {user_id: user.id}});
+            const userParks = await User_Park.findAll({where: {user_id: user.id}});
             res.locals.user = user;
             res.locals.userSubscription = userSubscription;
             res.locals.userSessions = userSessions;
             res.locals.userPurchasedTrails = userPurchasedTrails;
             res.locals.userAchievements = userAchievements;
-            res.locals.usersCompletedTrails = usersCompletedTrails;
+            res.locals.userCompletedTrails = usersCompletedTrails;
+            res.locals.userAddons = userAddons;
+            res.locals.userParks = userParks;
 
         } else {
             res.locals.user = null;
@@ -125,7 +131,9 @@ const findUser = async (req, res, next) => {
             res.locals.userSessions = null;
             res.locals.userPurchasedTrails = null;
             res.locals.userAchievements = null;
-            res.locals.usersCompletedTrails = null;
+            res.locals.userCompletedTrails = null; 
+            res.locals.userAddons = null;
+            res.locals.userParks = null;
 
         }
 
@@ -137,6 +145,40 @@ const findUser = async (req, res, next) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+const registerValidation = async (req, res, next) => {
+    let { email, username } = req.body;
+    email = email.toLowerCase();
+    username = username.toLowerCase();
+    let user;
+
+    try {
+        // Query the database for the user
+        user = await User.findOne({ where: { email } });
+
+        // Set userId in res.locals
+        if (user) {
+            console.debug('registerValidation User already exists via email', user )
+            res.locals.duplicateAttribute = 'Email';
+            return next();
+        } 
+        user = await User.findOne({ where: { username } });
+
+         if (user) {
+            console.debug('registerValidation User already exists via username', user)
+            res.locals.duplicateAttribute = 'Username';
+            return next();
+        } 
+        // Continue to the next middleware/route handler
+        console.debug('registerValidation User does not exist', user)
+        res.locals.duplicateAttribute = '';
+        return next();
+    } catch (error) {
+        // Handle any errors that occur
+        console.error('Error in registerValidation middleware:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 const getGlobalLeaderboards = async (req, res, next) => {
     const query = 'SELECT users.username, CAST(COALESCE(NULLIF(users.total_miles, \'\'), \'0.00\') AS DOUBLE PRECISION) AS total_miles  FROM users ' +
         'WHERE users.total_miles IS NOT NULL ' +
@@ -201,14 +243,26 @@ WHERE user_id = $1
     }
 }
 app.post('/api/users', findUser, async (req, res, next) => {
-    const { user, userSubscription, userSessions, userPurchasedTrails, userAchievements, usersCompletedTrails} = res.locals;
+    const { user, userSubscription, userSessions, userPurchasedTrails, userAchievements, userCompletedTrails, userAddons, userParks} = res.locals;
 
     if (user) {
         // Respond with userId if found
-        return res.status(200).json({ user, userSubscription, userSessions, userPurchasedTrails, userAchievements, usersCompletedTrails });
+        return res.status(200).json({ user, userSubscription, userSessions, userPurchasedTrails, userAchievements, userCompletedTrails, userAddons, userParks });
     } else {
         // Respond with a 404 status code if user not found
         return res.status(404).json({ message: 'User not found' });
+    }
+});
+
+app.post('/api/registerValidation', registerValidation, async (req, res, next) => {
+    const {duplicateAttribute} = res.locals;
+
+    if (duplicateAttribute) {
+        // Respond with a 409 status code if user already exists
+        return res.status(409).json({ duplicateAttribute, message: `${duplicateAttribute} already exists` });
+    } else {
+        // Continue to the next middleware/route handler
+        return res.status(200).json({ duplicateAttribute, message: 'Validation successful' }); 
     }
 });
 
@@ -809,7 +863,7 @@ async function seedDatabase(){
 }
 const connect = async () => {
     try {
-        await SYNC({force: true});
+        await SYNC({alter: true});
         await seedDatabase()
         //set random free trails
         exec(process.env.REROLL_FREE_TRAILS, (err, stdout, stderr) => {
@@ -841,9 +895,9 @@ const connect = async () => {
             'SERVER - connected to Postgres database trailtasks viia Sequelize!'
         );
 
-        app.listen(5500, () => {
+        app.listen(process.env.PORT || 5500, () => {
             console.log(
-                'SERVER-listening and connected to express server trailtasks!'
+                'SERVER-listening and connected to express server trailtasks! on port', process.env.PORT
             );
         });
     } catch (err) {
