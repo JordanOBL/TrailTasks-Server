@@ -108,8 +108,6 @@ export const User = sequelize.define(
   {
     id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
     username: {type: DataTypes.STRING, allowNull: false},
-    first_name: {type: DataTypes.STRING, allowNull: false},
-    last_name: {type: DataTypes.STRING, allowNull: false},
     email: {type: DataTypes.STRING, allowNull: false},
     password: {type: DataTypes.STRING, allowNull: false},
     push_notifications_enabled: {type: DataTypes.BOOLEAN, defaultValue: false},
