@@ -307,20 +307,20 @@ export const Session_Addon = sequelize.define(
   {tableName: 'sessions_addons', underscored: true}
 )
 
-export const Subscription = sequelize.define(
-  'Subscription',
-  {
-    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
-    user_id: {type: DataTypes.STRING, allowNull: false},
-    is_active: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    expires_at: {type: DataTypes.STRING, allowNull: true},
-  },
-  {tableName: 'users_subscriptions'}
-);
+//export const Subscription = sequelize.define(
+//  'Subscription',
+//  {
+//    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+//    user_id: {type: DataTypes.STRING, allowNull: false},
+//    is_active: {
+//      type: DataTypes.BOOLEAN,
+//      allowNull: false,
+//      defaultValue: false,
+//    },
+//    expires_at: {type: DataTypes.STRING, allowNull: true},
+//  },
+//  {tableName: 'users_subscriptions'}
+//);
 
 export const Addon = sequelize.define(
   'Addon',
@@ -442,8 +442,8 @@ Session_Addon.belongsTo(Addon, { foreignKey: 'addon_id' });
 Addon.hasMany(Session_Addon, { foreignKey: 'addon_id' });
 
 
-Subscription.hasOne(User, {foreignKey: 'user_id'});
-User.belongsTo(Subscription, {key: 'id'});
+//Subscription.hasOne(User, {foreignKey: 'user_id'});
+//User.belongsTo(Subscription, {key: 'id'});
 
 export const SYNC = async (cb) => {
   await sequelize.sync({...cb});

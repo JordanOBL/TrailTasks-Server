@@ -9,7 +9,7 @@ import {
     Park_State,
     SYNC,
     Session_Category,
-    Subscription,
+    //Subscription,
     Trail,
     User,
     User_Addon,
@@ -109,7 +109,7 @@ const findUser = async (req, res, next) => {
         // Set userId in res.locals
         if (user) {
 
-            const userSubscription = await Subscription.findAll({ where: { user_id: user.id } });
+            //const userSubscription = await Subscription.findAll({ where: { user_id: user.id } });
             const userSessions = await User_Session.findAll({ where: { user_id: user.id } });
             const userPurchasedTrails = await User_Purchased_Trail.findAll({ where: { user_id: user.id } });
             const userAchievements = await User_Achievement.findAll({ where: { user_id: user.id } });
@@ -117,7 +117,7 @@ const findUser = async (req, res, next) => {
             const userAddons = await User_Addon.findAll({where: {user_id: user.id}});
             const userParks = await User_Park.findAll({where: {user_id: user.id}});
             res.locals.user = user;
-            res.locals.userSubscription = userSubscription;
+            //res.locals.userSubscription = userSubscription;
             res.locals.userSessions = userSessions;
             res.locals.userPurchasedTrails = userPurchasedTrails;
             res.locals.userAchievements = userAchievements;
@@ -127,7 +127,7 @@ const findUser = async (req, res, next) => {
 
         } else {
             res.locals.user = null;
-            res.locals.userSubscription = null;
+            //res.locals.userSubscription = null;
             res.locals.userSessions = null;
             res.locals.userPurchasedTrails = null;
             res.locals.userAchievements = null;
@@ -243,11 +243,11 @@ WHERE user_id = $1
     }
 }
 app.post('/api/users', findUser, async (req, res, next) => {
-    const { user, userSubscription, userSessions, userPurchasedTrails, userAchievements, userCompletedTrails, userAddons, userParks} = res.locals;
+    const { user, userSessions, userPurchasedTrails, userAchievements, userCompletedTrails, userAddons, userParks} = res.locals;
 
     if (user) {
         // Respond with userId if found
-        return res.status(200).json({ user, userSubscription, userSessions, userPurchasedTrails, userAchievements, userCompletedTrails, userAddons, userParks });
+        return res.status(200).json({ user, userSessions, userPurchasedTrails, userAchievements, userCompletedTrails, userAddons, userParks });
     } else {
         // Respond with a 404 status code if user not found
         return res.status(404).json({ message: 'User not found' });
@@ -379,14 +379,14 @@ app.get('/pull', async (req, res) => {
                     id:{[Sequelize.Op.eq]: userId},
                 },
             });
-            const createdSubscriptions = await Subscription.findAll({
-                where: {
-                    createdAt: {
-                        [Sequelize.Op.gt]: lastPulledAt,
-                    },
-                },
-            });
-
+//            const createdSubscriptions = await Subscription.findAll({
+//                where: {
+//                    createdAt: {
+//                        [Sequelize.Op.gt]: lastPulledAt,
+//                    },
+//                },
+//            });
+//
             const createdTrails = await Trail.findAll({
                 where: {
                     createdAt: {
@@ -459,14 +459,14 @@ app.get('/pull', async (req, res) => {
                 },
             })
 
-            const updatedSubscriptions = await Subscription.findAll({
-                where: {
-                    updatedAt: {
-                        [Sequelize.Op.gt]: lastPulledAt,
-                    },
-                    user_id: userId,
-                },
-            });
+//            const updatedSubscriptions = await Subscription.findAll({
+//                where: {
+//                    updatedAt: {
+//                        [Sequelize.Op.gt]: lastPulledAt,
+//                    },
+//                    user_id: userId,
+//                },
+//            });
 
             const updatedParks = await Park.findAll({
                 where: {
@@ -535,7 +535,7 @@ app.get('/pull', async (req, res) => {
                 changes: {
                     addons: {
                         created: [],
-                        updated: [...createdAddons, ...updatedAddons],
+                        updated: [...updatedAddons],
                         deleted: [],
                     },
                     parks: {
@@ -550,7 +550,7 @@ app.get('/pull', async (req, res) => {
                     },
                 users_addons: {
                     created: [],
-                    updated: [...createdUserAddons, ...updatedUserAddons],
+                    updated: [...updatedUserAddons],
                     deleted: [],
                 },
                     users_completed_trails: {
@@ -563,11 +563,11 @@ app.get('/pull', async (req, res) => {
                         updated: createdUserParks.length ? createdUserParks : [],
                         deleted: [],
                     },
-                    users_subscriptions: {
-                        created: [],
-                        updated: updatedSubscriptions.length ? updatedSubscriptions : [],
-                        deleted: [],
-                    },
+//                    users_subscriptions: {
+//                        created: [],
+//                        updated: updatedSubscriptions.length ? updatedSubscriptions : [],
+//                        deleted: [],
+//                    },
                     users_achievements: {
                         created: [],
                         updated: createdUserAchievements,
@@ -655,11 +655,11 @@ app.post('/push', async (req, res) => {
                     changes.users_purchased_trails.created, {updateOnDuplicate: ['id']}
                 );
             }
-            if (changes?.users_subscriptions?.created[0] !== undefined) {
-                const users_subscriptions = await Subscription.bulkCreate(
-                    changes.users_subscriptions.created, {updateOnDuplicate: ['id']}
-                );
-            }
+//            if (changes?.users_subscriptions?.created[0] !== undefined) {
+//                const users_subscriptions = await Subscription.bulkCreate(
+//                    changes.users_subscriptions.created, {updateOnDuplicate: ['id']}
+//                );
+//            }
             if (changes?.users_completed_trails?.created[0] !== undefined) {
                 const users_completed_trails = await User_Completed_Trail.bulkCreate(
                     changes.users_completed_trails.created, {updateOnDuplicate: ['id']}
@@ -762,22 +762,22 @@ app.post('/push', async (req, res) => {
                 );
                 await Promise.all(updateQueries);
             }
-            if (changes?.users_subscriptions?.updated[0] !== undefined) {
-                const updateQueries = changes.users_subscriptions.updated.map(
-                    (remoteEntry) => {
-                        // console.log({remoteEntry});
-                        return Subscription.update(
-                            {...remoteEntry},
-                            {
-                                where: {
-                                    id: remoteEntry.id,
-                                },
-                            }
-                        );
-                    }
-                );
-                await Promise.all(updateQueries);
-            }
+//            if (changes?.users_subscriptions?.updated[0] !== undefined) {
+//                const updateQueries = changes.users_subscriptions.updated.map(
+//                    (remoteEntry) => {
+//                        // console.log({remoteEntry});
+//                        return Subscription.update(
+//                            {...remoteEntry},
+//                            {
+//                                where: {
+//                                    id: remoteEntry.id,
+//                                },
+//                            }
+//                        );
+//                    }
+//                );
+//                await Promise.all(updateQueries);
+//            }
             if (changes?.users_completed_trails?.updated[0] !== undefined) {
                 const updateQueries = changes.users_completed_trails.updated.map(
                     (remoteEntry) => {
