@@ -364,7 +364,7 @@ export const User_Park = sequelize.define(
     park_id: {type: DataTypes.STRING, allowNull: false},
     park_level: {type: DataTypes.INTEGER, allowNull: false},
     is_reward_redeemed: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true},
-    last_completed: {type: DataTypes.STRING, allowNull: false},
+    last_completed: {type: DataTypes.STRING, allowNull: true},
   },
   {tableName: 'users_parks',
     underscored: true,
