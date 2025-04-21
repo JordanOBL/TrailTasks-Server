@@ -17,7 +17,8 @@ import {
     User_Purchased_Trail,
     User_Session,
     Session_Addon,
-    User_Park
+    User_Park,
+    User_Friend
 } from './db/sequelizeModel.js';
 // import pool from "./db/config.js";
 
@@ -116,6 +117,7 @@ const findUser = async (req, res, next) => {
             const usersCompletedTrails = await User_Completed_Trail.findAll({where: {user_id: user.id}});
             const userAddons = await User_Addon.findAll({where: {user_id: user.id}});
             const userParks = await User_Park.findAll({where: {user_id: user.id}});
+            const userFriends = await User_Friend.findAll({where: {user_id: user.id}});
             res.locals.user = user;
             //res.locals.userSubscription = userSubscription;
             res.locals.userSessions = userSessions;
@@ -124,6 +126,7 @@ const findUser = async (req, res, next) => {
             res.locals.userCompletedTrails = usersCompletedTrails;
             res.locals.userAddons = userAddons;
             res.locals.userParks = userParks;
+            res.locals.userFriends = userFriends;
 
         } else {
             res.locals.user = null;
@@ -134,6 +137,7 @@ const findUser = async (req, res, next) => {
             res.locals.userCompletedTrails = null; 
             res.locals.userAddons = null;
             res.locals.userParks = null;
+            res.locals.userFriends = null;
 
         }
 
@@ -242,6 +246,91 @@ WHERE user_id = $1
         return next({ err, message: 'Error in server getLeaderboards' });
     }
 }
+
+
+//Friends search
+const friendSearch = async (req, res, next) => {
+    let username = req.query.username
+    username = username.toLowerCase();
+    try {
+        
+       // const friend = await User.findOne({ where: { username } });
+        //const {password, ...safeFriend} = friend;
+            const query = `SELECT users.id as friend_id, users.username, users.total_miles, trails.trail_name as current_trail, users.trail_progress, users.room_id FROM users JOIN trails ON trails.id = users.trail_id WHERE users.username = $1;`
+        const results = await sequelize.query(query, {
+            bind: [username],
+            type: QueryTypes.SELECT,
+        })
+        console.log('friend from server friendSearch()', results);
+        if (!results || results.length === 0) {
+            res.locals.friend = null;
+            return next();
+        }
+
+        res.locals.friend = results[0];
+        return next();
+    } catch (error) {
+        console.error('Error in searchUser middleware:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+app.get('/api/searchFriends', friendSearch, async (req, res, next) => {
+
+    if (res.locals.friend) {
+        console.debug('searchFriends', res.locals.friend)
+        // Respond with userId if found
+        return res.status(200).json({ friend: res.locals.friend, message: 'Friend found' });
+    } else {
+        // Respond with a 404 status code if user not found
+        return res.status(404).json({ friend: null, message: 'Friend not found' });
+    }
+})
+const getCachedFriends = async (req, res, next) => {
+    const userId  = req.query.userId;
+    console.log('getCachedFriends UserId param', userId);
+    const query = `SELECT users.id as friend_id, users.username, users.total_miles, trails.trail_name as current_trail, users.room_id FROM users JOIN trails ON trails.id = users.trail_id WHERE users.id IN (SELECT friend_id FROM users_friends WHERE user_id = $1);`
+    //const query = `SELECT * FROM users_friends WHERE user_id = $1;`
+
+
+    try {
+        const results = await sequelize.query(query, {
+            bind: [userId],
+            type: QueryTypes.SELECT,
+        });
+        if (results && results.length > 0) {
+
+            console.log('Global Friends:', results);
+            const friendMap = {}
+            results.forEach((friend) => {
+
+                friendMap[friend.friend_id] = friend
+
+            })
+            console.log(friendMap)
+            res.locals.friends = friendMap;
+        } else {
+            res.locals.friends = []; // Handle the case where no results are found
+            console.log('No data found for the query');
+        }
+        return next();
+    } catch (err) {
+        console.error('Error in getCachedFriends:', err); // Improved error logging
+        return next({ err, message: 'Error in server getCachedFriends' });
+    }
+ }
+app.get('/api/cachedFriends', getCachedFriends, async (req, res, next) => {
+    console.log('calling getCachedFriends');
+
+    if (res.locals.friends) {
+        // Respond with friends if found
+        return res.status(200).json({ friends: res.locals.friends });
+    } else {
+        // Respond with a 404 status code if friends not found
+        return res.status(404).json({ message: 'Friends not found' });
+    }
+});
 app.post('/api/users', findUser, async (req, res, next) => {
     const { user, userSessions, userPurchasedTrails, userAchievements, userCompletedTrails, userAddons, userParks} = res.locals;
 
@@ -529,6 +618,14 @@ app.get('/pull', async (req, res) => {
                     },
                     user_id: userId,
                 },
+            });
+            const updatedFriends = await User_Friend.findAll({
+                where: {
+                    updatedAt: {
+                        [Sequelize.Op.gt]: lastPulledAt,
+                    },
+                    user_id: userId,
+                },
             })
             //!Removed createdusers, createdUsersSubscriptinos, and created UsersMiles arrays. This removed the fail to update error.
             const responseData = {
@@ -581,6 +678,11 @@ app.get('/pull', async (req, res) => {
                     users_sessions: {
                         created: [],
                         updated: updatedUserSessions,
+                        deleted: [],
+                    },
+                    users_friends: {
+                        created: [],
+                        updated: updatedFriends,
                         deleted: [],
                     },
                     trails: {
@@ -653,6 +755,11 @@ app.post('/push', async (req, res) => {
             if (changes?.users_purchased_trails?.created[0] !== undefined) {
                 const users_purchased_trails = await User_Purchased_Trail.bulkCreate(
                     changes.users_purchased_trails.created, {updateOnDuplicate: ['id']}
+                );
+            }
+            if (changes?.users_friends?.created[0] !== undefined) {
+                const users_friends = await User_Friend.bulkCreate(
+                    changes.users_friends.created, {updateOnDuplicate: ['id']}
                 );
             }
 //            if (changes?.users_subscriptions?.created[0] !== undefined) {

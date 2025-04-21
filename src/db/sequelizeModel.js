@@ -107,8 +107,8 @@ export const User = sequelize.define(
   'User',
   {
     id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
-    username: {type: DataTypes.STRING, allowNull: false},
-    email: {type: DataTypes.STRING, allowNull: false},
+    username: {type: DataTypes.STRING, allowNull: false, unique: true},
+    email: {type: DataTypes.STRING, allowNull: false, unique: true},
     password: {type: DataTypes.STRING, allowNull: false},
     push_notifications_enabled: {type: DataTypes.BOOLEAN, defaultValue: false},
     daily_streak: {type: DataTypes.INTEGER, defaultValue: 0},
@@ -128,6 +128,7 @@ export const User = sequelize.define(
     trail_started_at: {type: DataTypes.STRING, allowNull: false},
     trail_tokens: {type: DataTypes.INTEGER, allowNull: false},
     prestige_level: {type: DataTypes.INTEGER, allowNull: false, defaultValue: 0},
+    room_id: {type: DataTypes.STRING, allowNull: true},
   },
   {
     tableName: 'users',
@@ -377,6 +378,23 @@ export const User_Park = sequelize.define(
   }
 )
 
+export const User_Friend = sequelize.define(
+  'User_Friend',
+  {
+    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
+    user_id: {type: DataTypes.STRING, allowNull: false},
+    friend_id: {type: DataTypes.STRING, allowNull: false},
+  },
+  {tableName: 'users_friends',
+    indexes: [
+      // Create a unique index on field
+      {
+        fields: ['user_id', 'friend_id'],
+      },
+    ],
+  }
+)
+
 User.belongsTo(Trail, {foreignKey: 'trail_id'});
 Trail.hasMany(User, {foreignKey: 'trail_id'});
 
@@ -440,6 +458,12 @@ User_Park.belongsTo(Park, { foreignKey: 'park_id' });
 // Session_Addon belongs to an Addon
 Session_Addon.belongsTo(Addon, { foreignKey: 'addon_id' });
 Addon.hasMany(Session_Addon, { foreignKey: 'addon_id' });
+
+User_Friend.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(User_Friend, { foreignKey: 'user_id' });
+
+User_Friend.belongsTo(User, { foreignKey: 'friend_id' });
+User.hasMany(User_Friend, { foreignKey: 'friend_id' });
 
 
 //Subscription.hasOne(User, {foreignKey: 'user_id'});
