@@ -928,10 +928,10 @@ async function seedDatabase(){
         const trails = await Trail.findAll()
 
         // Set userId in res.locals
-        if (trails.length > 0) {
-            console.log("initial Database  already loaded")
-            return
-        }
+//        if (trails.length > 0) {
+//            console.log("initial Database  already loaded")
+//            return
+//        }
         console.log('seeding postgres table...');
         try {
             await Park.bulkCreate(
