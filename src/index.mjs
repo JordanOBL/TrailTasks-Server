@@ -1001,8 +1001,9 @@ const connect = async () => {
         console.log(
             'SERVER - connected to Postgres database trailtasks viia Sequelize!'
         );
-
-        app.listen(process.env.PORT || 5500, () => {
+        const PORT = process.env.PORT || 5500;
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`)
             console.log(
                 'SERVER-listening and connected to express server trailtasks! on port', process.env.PORT
             );
