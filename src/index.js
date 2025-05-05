@@ -970,7 +970,7 @@ async function seedDatabase(){
 }
 const connect = async () => {
     try {
-        await SYNC({alter: true});
+        await SYNC({force: true});
         await seedDatabase()
         //set random free trails
         exec(process.env.REROLL_FREE_TRAILS, (err, stdout, stderr) => {
