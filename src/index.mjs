@@ -970,7 +970,7 @@ async function seedDatabase(){
 }
 const connect = async () => {
     try {
-        await SYNC({force: true});
+        await SYNC({alter: true});
         await seedDatabase()
         //set random free trails
         exec(process.env.REROLL_FREE_TRAILS, (err, stdout, stderr) => {
@@ -1004,9 +1004,7 @@ const connect = async () => {
         const PORT = process.env.PORT || 5500;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`)
-            console.log(
-                'SERVER-listening and connected to express server trailtasks! on port', process.env.PORT
-            );
+         
         });
     } catch (err) {
         console.log(err.message);
