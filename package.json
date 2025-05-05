@@ -2,16 +2,17 @@
   "name": "expressjs-postgres",
   "private": true,
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "author": "Jordan",
   "license": "MIT",
+  "type":"module",
   "scripts": {
-    "start:dev": "cross-env NODE_ENV=development nodemon src/index.js",
+    "start:dev": "cross-env NODE_ENV=development nodemon src/index.mjs",
     "build": "npm run build-js",
-    "start:prod": "cross-env NODE_ENV=production node dist/index.js",
+    "start:prod": "cross-env NODE_ENV=production node dist/index.mjs",
     "build-js": "babel src --out-dir dist --copy-files --ignore '**/*.spec.js'",
     "test": "jest",
-    "start:test": "cross-env NODE_ENV=test nodemon src/index.js"
+    "start:test": "cross-env NODE_ENV=test nodemon src/index.mjs"
 
   },
   "dependencies": {
