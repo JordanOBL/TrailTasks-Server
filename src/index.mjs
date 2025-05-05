@@ -346,12 +346,12 @@ app.post('/api/users', findUser, async (req, res, next) => {
 app.post('/api/registerValidation', registerValidation, async (req, res, next) => {
     const {duplicateAttribute} = res.locals;
 
-    if (duplicateAttribute) {
+    if (duplicateAttribute != '') {
         // Respond with a 409 status code if user already exists
         return res.status(409).json({ duplicateAttribute, message: `${duplicateAttribute} already exists` });
     } else {
         // Continue to the next middleware/route handler
-        return res.status(200).json({ duplicateAttribute, message: 'Validation successful' }); 
+        return res.status(200).json({ duplicateAttribute: '', message: 'Validation successful' }); 
     }
 });
 
