@@ -60,8 +60,7 @@ const app = express();
 app.use(express.json());
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended: true}));
-app.use(cors({ origin: true, credentials: true }));
-
+app.use('*', cors());
 
 //app.use("/api/sync", router);
 console.log(`Current working directory: ${process.cwd()}`);
